@@ -1,44 +1,165 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 
+// ---------- Types ----------
+interface Profile {
+  id: string;
+  email?: string;
+  name?: string;
+}
+
+interface Stock {
+  stock_code: string;
+  symbol: string;
+  company_name: string;
+}
+
+interface Portfolio {
+  id: string;
+  name: string;
+  colour: string;
+}
+
+interface Holding {
+  id: string;
+  stock_code: string;
+  shares: number | null;
+  stocks?: Stock;
+}
+
+// ---------- Component ----------
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ email?: string; name?: string } | null>(
-    null
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [holdingsMap, setHoldingsMap] = useState<Record<string, Holding[]>>(
+    {}
   );
   const [loading, setLoading] = useState(true);
 
+  // Add stock modal state
+  const [showAddStock, setShowAddStock] = useState(false);
+  const [addPortfolioId, setAddPortfolioId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<Stock[]>([]);
+  const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
+  const [shares, setShares] = useState("");
+  const [searching, setSearching] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // ---------- Data fetching ----------
+  const fetchData = useCallback(async () => {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    if (!authUser) {
+      router.push("/login");
+      return;
+    }
+
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("id, name, email")
+      .eq("id", authUser.id)
+      .single();
+    if (p) setProfile(p);
+
+    const { data: pf } = await supabase
+      .from("portfolios")
+      .select("*")
+      .order("created_at");
+    if (pf) {
+      setPortfolios(pf);
+      // fetch holdings for each portfolio
+      const hMap: Record<string, Holding[]> = {};
+      await Promise.all(
+        pf.map(async (port) => {
+          const { data: h } = await supabase
+            .from("holdings")
+            .select("id, stock_code, shares")
+            .eq("portfolio_id", port.id);
+          if (h) {
+            // fetch stock details for each holding
+            const enriched = await Promise.all(
+              h.map(async (holding) => {
+                const { data: s } = await supabase
+                  .from("stocks")
+                  .select("stock_code, symbol, company_name")
+                  .eq("stock_code", holding.stock_code)
+                  .single();
+                return { ...holding, stocks: s ?? undefined };
+              })
+            );
+            hMap[port.id] = enriched;
+          } else {
+            hMap[port.id] = [];
+          }
+        })
+      );
+      setHoldingsMap(hMap);
+    }
+
+    setLoading(false);
+  }, [router]);
+
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-      if (authUser) {
-        // Fetch the profile row to get the display name
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("name, email")
-          .eq("id", authUser.id)
-          .single();
+    fetchData();
+  }, [fetchData]);
 
-        setUser({
-          email: profile?.email ?? authUser.email ?? undefined,
-          name: profile?.name ?? undefined,
-        });
-      }
-      setLoading(false);
-    };
-    getUser();
-  }, []);
+  // ---------- Stock search ----------
+  useEffect(() => {
+    if (!showAddStock || !searchTerm || searchTerm.length < 1) {
+      setSearchResults([]);
+      return;
+    }
 
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      const term = `%${searchTerm.toUpperCase()}%`;
+      const { data } = await supabase
+        .from("stocks")
+        .select("stock_code, symbol, company_name")
+        .or(`symbol.ilike.${term},company_name.ilike.${term}`)
+        .eq("is_active", true)
+        .limit(10);
+      if (data) setSearchResults(data);
+      setSearching(false);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, showAddStock]);
+
+  // ---------- Add holding ----------
+  const handleAddHolding = async () => {
+    if (!addPortfolioId || !selectedStock || !shares) return;
+
+    const { error } = await supabase.from("holdings").insert({
+      portfolio_id: addPortfolioId,
+      stock_code: selectedStock.stock_code,
+      shares: parseInt(shares, 10),
+    });
+
+    if (!error) {
+      setShowAddStock(false);
+      setSearchTerm("");
+      setSelectedStock(null);
+      setShares("");
+      fetchData();
+    } else {
+      console.error("Add holding error:", error.message);
+    }
+  };
+
+  // ---------- Sign out ----------
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/login");
   };
 
+  // ---------- Loading ----------
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -47,6 +168,7 @@ export default function DashboardPage() {
     );
   }
 
+  // ---------- Render ----------
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top navigation bar */}
@@ -57,7 +179,7 @@ export default function DashboardPage() {
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">
-              {user?.name ?? user?.email ?? "Signed in"}
+              {profile?.name ?? profile?.email ?? "Signed in"}
             </span>
             <button
               onClick={handleSignOut}
@@ -69,16 +191,97 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Main content area */}
+      {/* Main content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Portfolio colour legend placeholder */}
-        <div className="mb-8 rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200">
-          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-            Portfolios
-          </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            No portfolios yet. Create one to get started.
-          </p>
+        {/* Portfolios */}
+        <div className="mb-8 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+              Portfolios
+            </h2>
+            <button
+              onClick={async () => {
+                const name = prompt("Portfolio name:");
+                if (!name) return;
+                await supabase.from("portfolios").insert({
+                  user_id: profile!.id,
+                  name,
+                  colour: "#6366F1",
+                });
+                fetchData();
+              }}
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              + Add Portfolio
+            </button>
+          </div>
+
+          {portfolios.length === 0 && (
+            <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200">
+              <p className="text-sm text-gray-400">
+                No portfolios yet. Create one to get started.
+              </p>
+            </div>
+          )}
+
+          {portfolios.map((pf) => (
+            <div
+              key={pf.id}
+              className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="inline-block h-4 w-4 rounded-full"
+                    style={{ backgroundColor: pf.colour }}
+                  />
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    {pf.name}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => {
+                    setAddPortfolioId(pf.id);
+                    setShowAddStock(true);
+                    setTimeout(() => searchInputRef.current?.focus(), 100);
+                  }}
+                  className="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                >
+                  + Add Stock
+                </button>
+              </div>
+
+              {/* Holdings */}
+              {(!holdingsMap[pf.id] || holdingsMap[pf.id].length === 0) && (
+                <p className="text-xs text-gray-400 ml-7">
+                  No holdings yet.
+                </p>
+              )}
+
+              {holdingsMap[pf.id]?.length > 0 && (
+                <div className="ml-7 space-y-1">
+                  {holdingsMap[pf.id].map((h) => (
+                    <div
+                      key={h.id}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div>
+                        <span className="font-medium text-gray-900">
+                          {h.stocks?.symbol ?? h.stock_code}
+                        </span>
+                        <span className="ml-2 text-gray-500">
+                          {h.stocks?.company_name ?? ""}
+                        </span>
+                      </div>
+                      <span className="text-gray-400 text-xs">
+                        {h.shares != null ? `${h.shares} shares` : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Calendar placeholder */}
@@ -110,6 +313,102 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* ---------- Add Stock Modal ---------- */}
+      {showAddStock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Add Stock to Portfolio
+            </h3>
+
+            {/* Search */}
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Search by symbol or company name
+            </label>
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setSelectedStock(null);
+              }}
+              placeholder="e.g. MAYBANK or 1155"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+
+            {/* Results */}
+            <div className="mt-2 max-h-48 overflow-y-auto">
+              {searching && (
+                <p className="text-xs text-gray-400 py-2">Searching…</p>
+              )}
+              {!searching && searchTerm && searchResults.length === 0 && (
+                <p className="text-xs text-gray-400 py-2">No results.</p>
+              )}
+              {searchResults.map((stock) => (
+                <button
+                  key={stock.stock_code}
+                  onClick={() => {
+                    setSelectedStock(stock);
+                    setSearchTerm(
+                      `${stock.symbol} — ${stock.company_name}`
+                    );
+                    setSearchResults([]);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-indigo-50 transition-colors ${
+                    selectedStock?.stock_code === stock.stock_code
+                      ? "bg-indigo-50 ring-1 ring-indigo-300"
+                      : ""
+                  }`}
+                >
+                  <span className="font-medium text-gray-900">
+                    {stock.symbol}
+                  </span>
+                  <span className="ml-2 text-gray-500">
+                    {stock.company_name}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Shares */}
+            <label className="block text-sm font-medium text-gray-700 mt-4 mb-1">
+              Number of shares
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={shares}
+              onChange={(e) => setShares(e.target.value)}
+              placeholder="e.g. 1000"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+
+            {/* Actions */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowAddStock(false);
+                  setSearchTerm("");
+                  setSelectedStock(null);
+                  setShares("");
+                }}
+                className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddHolding}
+                disabled={!selectedStock || !shares}
+                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add to Portfolio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
