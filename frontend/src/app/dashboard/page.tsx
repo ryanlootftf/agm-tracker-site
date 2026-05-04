@@ -50,10 +50,9 @@ export default function DashboardPage() {
   const [searching, setSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Edit/delete holding state
-  const [editingSharesId, setEditingSharesId] = useState<string | null>(null);
-  const [editingSharesValue, setEditingSharesValue] = useState("");
-  const editInputRef = useRef<HTMLInputElement>(null);
+  // Manage holding modal state
+  const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
+  const [modalShares, setModalShares] = useState("");
 
   // ---------- Data fetching ----------
   const fetchData = useCallback(async () => {
@@ -137,32 +136,32 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, [searchTerm, showAddStock]);
 
-  // ---------- Edit shares ----------
-  const handleStartEditShares = (holding: Holding) => {
-    setEditingSharesId(holding.id);
-    setEditingSharesValue(holding.shares?.toString() ?? "");
-    setTimeout(() => editInputRef.current?.focus(), 50);
+  // ---------- Manage holding modal ----------
+  const handleOpenHoldingModal = (holding: Holding) => {
+    setSelectedHolding(holding);
+    setModalShares(holding.shares?.toString() ?? "");
   };
 
-  const handleSaveShares = async (holdingId: string) => {
-    const newShares = parseInt(editingSharesValue, 10);
-    if (isNaN(newShares) || newShares < 1) {
-      setEditingSharesId(null);
-      return;
-    }
-    await supabase.from("holdings").update({ shares: newShares }).eq("id", holdingId);
-    setEditingSharesId(null);
+  const handleCloseHoldingModal = () => {
+    setSelectedHolding(null);
+    setModalShares("");
+  };
+
+  const handleSaveSharesModal = async () => {
+    if (!selectedHolding) return;
+    const newShares = parseInt(modalShares, 10);
+    if (isNaN(newShares) || newShares < 1) return;
+    await supabase.from("holdings").update({ shares: newShares }).eq("id", selectedHolding.id);
+    handleCloseHoldingModal();
     fetchData();
   };
 
-  const handleCancelEditShares = () => {
-    setEditingSharesId(null);
-  };
-
-  // ---------- Delete holding ----------
-  const handleDeleteHolding = async (holdingId: string, symbol: string) => {
+  const handleDeleteHoldingModal = async () => {
+    if (!selectedHolding) return;
+    const symbol = selectedHolding.stocks?.symbol ?? selectedHolding.stock_code;
     if (!confirm(`Remove ${symbol} from this portfolio?`)) return;
-    await supabase.from("holdings").delete().eq("id", holdingId);
+    await supabase.from("holdings").delete().eq("id", selectedHolding.id);
+    handleCloseHoldingModal();
     fetchData();
   };
 
@@ -299,66 +298,20 @@ export default function DashboardPage() {
                       key={h.id}
                       className="flex items-center justify-between text-sm"
                     >
-                      <div>
+                      <button
+                        onClick={() => handleOpenHoldingModal(h)}
+                        className="flex items-center gap-2 text-left hover:bg-gray-50 rounded px-1 py-0.5 transition-colors"
+                      >
                         <span className="font-medium text-gray-900">
                           {h.stocks?.symbol ?? h.stock_code}
                         </span>
-                        <span className="ml-2 text-gray-500">
+                        <span className="text-gray-500">
                           {h.stocks?.company_name ?? ""}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {editingSharesId === h.id ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              ref={editInputRef}
-                              type="number"
-                              min="1"
-                              value={editingSharesValue}
-                              onChange={(e) => setEditingSharesValue(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveShares(h.id);
-                                if (e.key === "Escape") handleCancelEditShares();
-                              }}
-                              className="w-20 rounded border border-gray-300 px-2 py-0.5 text-xs shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            <button
-                              onClick={() => handleSaveShares(h.id)}
-                              className="text-xs text-indigo-600 hover:text-indigo-500 font-medium"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={handleCancelEditShares}
-                              className="text-xs text-gray-400 hover:text-gray-500"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => handleStartEditShares(h)}
-                            className="text-gray-400 text-xs hover:text-indigo-500 transition-colors"
-                            title="Edit shares"
-                          >
-                            {h.shares != null ? `${h.shares} shares` : "0 shares"}
-                          </button>
-                        )}
-                        <button
-                          onClick={() =>
-                            handleDeleteHolding(
-                              h.id,
-                              h.stocks?.symbol ?? h.stock_code
-                            )
-                          }
-                          className="text-gray-300 hover:text-red-500 transition-colors"
-                          title="Remove stock"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
+                      </button>
+                      <span className="text-gray-400 text-xs">
+                        {h.shares != null ? `${h.shares} shares` : "0 shares"}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -396,6 +349,67 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* ---------- Manage Holding Modal ---------- */}
+      {selectedHolding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Manage Holding
+            </h3>
+
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="font-medium text-gray-500">Symbol:</span>{" "}
+                <span className="text-gray-900">{selectedHolding.stocks?.symbol ?? selectedHolding.stock_code}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-500">Company:</span>{" "}
+                <span className="text-gray-900">{selectedHolding.stocks?.company_name ?? "—"}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-500">Stock Code:</span>{" "}
+                <span className="text-gray-900">{selectedHolding.stock_code}</span>
+              </div>
+            </div>
+
+            <label className="block text-sm font-medium text-gray-700 mt-5 mb-1">
+              Number of shares
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={modalShares}
+              onChange={(e) => setModalShares(e.target.value)}
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+
+            <div className="mt-6 flex items-center justify-between">
+              <button
+                onClick={handleDeleteHoldingModal}
+                className="rounded-md bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors"
+              >
+                Delete
+              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCloseHoldingModal}
+                  className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveSharesModal}
+                  disabled={!modalShares}
+                  className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ---------- Add Stock Modal ---------- */}
       {showAddStock && (
