@@ -30,6 +30,23 @@ interface Holding {
   stocks?: Stock;
 }
 
+interface AGMEvent {
+  id: string;
+  stock_code: string;
+  stock_ticker: string;
+  meeting_date: string;
+  meeting_time: string | null;
+  meeting_type: string;
+  meeting_location: string | null;
+  venue_type: string;
+  meeting_link: string | null;
+}
+
+interface HolderInfo {
+  colour: string;
+  name: string;
+}
+
 // ---------- Component ----------
 export default function DashboardPage() {
   const router = useRouter();
@@ -59,6 +76,13 @@ export default function DashboardPage() {
     message: string;
     onConfirm: () => void;
   } | null>(null);
+
+  // AGM calendar state
+  const [agmEvents, setAgmEvents] = useState<AGMEvent[]>([]);
+  const [holderMap, setHolderMap] = useState<Record<string, HolderInfo[]>>({});
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+  const [selectedEvent, setSelectedEvent] = useState<AGMEvent | null>(null);
 
   // Add portfolio modal state
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
@@ -126,6 +150,33 @@ export default function DashboardPage() {
         })
       );
       setHoldingsMap(hMap);
+
+      // Build colour map: stock_code → which portfolios own it
+      const colourMap: Record<string, HolderInfo[]> = {};
+      for (const port of pf) {
+        const hList = hMap[port.id] ?? [];
+        for (const h of hList) {
+          if (!colourMap[h.stock_code]) colourMap[h.stock_code] = [];
+          if (!colourMap[h.stock_code].some((hi) => hi.colour === port.colour)) {
+            colourMap[h.stock_code].push({ colour: port.colour, name: port.name });
+          }
+        }
+      }
+      setHolderMap(colourMap);
+
+      // Fetch upcoming AGM events for all held stock codes
+      const allCodes = Object.keys(colourMap);
+      if (allCodes.length > 0) {
+        const today = new Date().toISOString().split("T")[0];
+        const { data: events } = await supabase
+          .from("agm_events")
+          .select("*")
+          .in("stock_code", allCodes)
+          .gte("meeting_date", today)
+          .eq("is_active", true)
+          .order("meeting_date", { ascending: true });
+        if (events) setAgmEvents(events);
+      }
     }
 
     setLoading(false);
@@ -373,39 +424,236 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Calendar placeholder */}
-        <div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-gray-200">
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-indigo-50 p-4 mb-4">
-              <svg
-                className="h-8 w-8 text-indigo-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
+        {/* ---------- AGM Calendar ---------- */}
+        <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          {/* Calendar header */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+              AGM Calendar
+            </h2>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  if (calendarMonth === 0) {
+                    setCalendarMonth(11);
+                    setCalendarYear(calendarYear - 1);
+                  } else {
+                    setCalendarMonth(calendarMonth - 1);
+                  }
+                }}
+                className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
-                />
-              </svg>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+              </button>
+              <span className="text-sm font-medium text-gray-700 min-w-[120px] text-center">
+                {new Date(calendarYear, calendarMonth).toLocaleString("default", { month: "long", year: "numeric" })}
+              </span>
+              <button
+                onClick={() => {
+                  if (calendarMonth === 11) {
+                    setCalendarMonth(0);
+                    setCalendarYear(calendarYear + 1);
+                  } else {
+                    setCalendarMonth(calendarMonth + 1);
+                  }
+                }}
+                className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </button>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Your AGM Calendar
-            </h3>
-            <p className="mt-2 text-sm text-gray-500 max-w-md">
-              Your upcoming AGM meetings will appear here once you add holdings
-              to your portfolios and the daily scraper has fetched the latest
-              data.
-            </p>
           </div>
+
+          {/* Day-of-week headers */}
+          <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-400 mb-2">
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+              <div key={d} className="py-1">{d}</div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 text-sm">
+            {(() => {
+              const firstDay = new Date(calendarYear, calendarMonth, 1);
+              // 0=Sun, 1=Mon, ... → convert to Mon-based: 0 → 6
+              let startOffset = firstDay.getDay() - 1;
+              if (startOffset < 0) startOffset = 6;
+              const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+              const today = new Date().toISOString().split("T")[0];
+
+              // Group events by date
+              const eventsByDate: Record<string, AGMEvent[]> = {};
+              for (const ev of agmEvents) {
+                const d = ev.meeting_date;
+                if (!eventsByDate[d]) eventsByDate[d] = [];
+                eventsByDate[d].push(ev);
+              }
+
+              const cells: React.ReactNode[] = [];
+
+              // Empty leading cells
+              for (let i = 0; i < startOffset; i++) {
+                cells.push(<div key={`empty-${i}`} className="min-h-[80px] p-1" />);
+              }
+
+              // Day cells
+              for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const dayEvents = eventsByDate[dateStr] ?? [];
+                const isToday = dateStr === today;
+
+                cells.push(
+                  <div
+                    key={day}
+                    className={`min-h-[80px] p-1 border-t border-l border-gray-100 ${
+                      isToday ? "bg-indigo-50/60" : ""
+                    }`}
+                  >
+                    <div
+                      className={`text-xs font-medium mb-1 ${
+                        isToday
+                          ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {day}
+                    </div>
+                    {dayEvents.map((ev) => (
+                      <button
+                        key={ev.id}
+                        onClick={() => setSelectedEvent(ev)}
+                        className="flex items-center gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-gray-100 transition-colors mb-0.5"
+                      >
+                        {/* Colour dots for each portfolio holding this stock */}
+                        <div className="flex -space-x-0.5 shrink-0">
+                          {(holderMap[ev.stock_code] ?? []).map((h, i) => (
+                            <span
+                              key={i}
+                              className="inline-block h-2 w-2 rounded-full ring-1 ring-white"
+                              style={{ backgroundColor: h.colour }}
+                              title={h.name}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[11px] font-medium text-gray-700 truncate">
+                          {ev.stock_ticker}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              }
+
+              return cells;
+            })()}
+          </div>
+
+          {/* Empty state */}
+          {agmEvents.length === 0 && (
+            <p className="mt-4 text-center text-xs text-gray-400">
+              No upcoming AGM events for your holdings.
+            </p>
+          )}
         </div>
       </main>
 
+      {/* ---------- Event Detail Popover ---------- */}
+      {selectedEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setSelectedEvent(null)}>
+          <div
+            className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedEvent.stock_ticker}
+                </h3>
+                <p className="text-sm text-gray-500">{selectedEvent.stock_code}</p>
+              </div>
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Date</span>
+                <span className="text-gray-900 font-medium">
+                  {new Date(selectedEvent.meeting_date + "T00:00:00").toLocaleDateString("en-MY", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+              {selectedEvent.meeting_time && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Time</span>
+                  <span className="text-gray-900">{selectedEvent.meeting_time}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-500">Type</span>
+                <span className="text-gray-900">{selectedEvent.meeting_type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Venue</span>
+                <span className="text-gray-900">{selectedEvent.venue_type}</span>
+              </div>
+              {selectedEvent.meeting_location && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Location</span>
+                  <span className="text-gray-900 text-right max-w-[200px]">{selectedEvent.meeting_location}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Portfolios holding this stock */}
+            {(holderMap[selectedEvent.stock_code] ?? []).length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Held by portfolios</p>
+                <div className="flex flex-wrap gap-2">
+                  {(holderMap[selectedEvent.stock_code] ?? []).map((h, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white"
+                      style={{ backgroundColor: h.colour }}
+                    >
+                      {h.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedEvent.meeting_link && (
+              <a
+                href={selectedEvent.meeting_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 block w-full rounded-md bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white shadow-sm hover:bg-indigo-500 transition-colors"
+              >
+                Open Meeting Link
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ---------- Confirm Dialog ---------- */}
       {confirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30">
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
             <p className="text-sm text-gray-700">{confirmDialog.message}</p>
             <div className="mt-6 flex justify-end gap-3">
