@@ -1,6 +1,52 @@
 "use client";
 
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 export default function DashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<{ email?: string; name?: string } | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (authUser) {
+        // Fetch the profile row to get the display name
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, email")
+          .eq("id", authUser.id)
+          .single();
+
+        setUser({
+          email: profile?.email ?? authUser.email ?? undefined,
+          name: profile?.name ?? undefined,
+        });
+      }
+      setLoading(false);
+    };
+    getUser();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <p className="text-sm text-gray-400">Loading…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top navigation bar */}
@@ -11,8 +57,14 @@ export default function DashboardPage() {
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">
-              Not signed in
+              {user?.name ?? user?.email ?? "Signed in"}
             </span>
+            <button
+              onClick={handleSignOut}
+              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </header>
@@ -51,9 +103,9 @@ export default function DashboardPage() {
               Your AGM Calendar
             </h3>
             <p className="mt-2 text-sm text-gray-500 max-w-md">
-              Your upcoming AGM meetings will appear here once you
-              add holdings to your portfolios and the daily scraper
-              has fetched the latest data.
+              Your upcoming AGM meetings will appear here once you add holdings
+              to your portfolios and the daily scraper has fetched the latest
+              data.
             </p>
           </div>
         </div>

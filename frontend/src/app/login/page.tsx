@@ -1,9 +1,18 @@
 "use client";
 
+import { supabase } from "@/lib/supabase";
+
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
-    // TODO: Wire up Supabase Google OAuth
-    console.log("Google login clicked");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) {
+      console.error("Login error:", error.message);
+    }
   };
 
   return (
