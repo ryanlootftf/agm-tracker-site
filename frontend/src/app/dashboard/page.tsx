@@ -454,7 +454,7 @@ export default function DashboardPage() {
                       onClick={() => handleOpenHoldingModal(h)}
                       className="flex w-full items-center gap-2 text-left hover:bg-elevated rounded px-1 py-0.5 transition-colors"
                     >
-                      <span className="text-sm font-semibold text-primary">
+                      <span className="text-base font-bold text-primary">
                         {h.stocks?.symbol ?? h.stock_code}
                       </span>
                       <span className="text-secondary text-sm font-medium">
@@ -585,7 +585,7 @@ export default function DashboardPage() {
                         ))}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-primary">
+                        <div className="text-base font-bold text-primary">
                           {ev.stock_ticker}
                         </div>
                         <div className="text-xs text-secondary truncate">
@@ -668,7 +668,7 @@ export default function DashboardPage() {
                                 />
                               ))}
                             </div>
-                            <span className="text-xs font-semibold text-primary truncate">
+                            <span className="text-sm font-bold text-primary truncate">
                               {ev.stock_ticker}
                             </span>
                           </button>
@@ -702,7 +702,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-primary">
+                <h3 className="text-xl font-bold text-primary">
                   {selectedEvent.stock_ticker}
                 </h3>
                 <p className="text-sm text-secondary">{selectedEvent.stock_code}</p>
