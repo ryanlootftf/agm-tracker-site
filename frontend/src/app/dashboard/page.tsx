@@ -86,8 +86,9 @@ export default function DashboardPage() {
   const [selectedEvent, setSelectedEvent] = useState<AGMEvent | null>(null);
   const [selectedDateList, setSelectedDateList] = useState<string | null>(null);
 
-  // Portfolio collapse state
+  // Portfolio collapse state (starts collapsed)
   const [collapsedPfs, setCollapsedPfs] = useState<Set<string>>(new Set());
+  const [initialCollapseDone, setInitialCollapseDone] = useState(false);
 
   // Add portfolio modal state
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
@@ -128,6 +129,11 @@ export default function DashboardPage() {
       .order("created_at");
     if (pf) {
       setPortfolios(pf);
+      // collapse portfolios by default on first load
+      if (!initialCollapseDone) {
+        setCollapsedPfs(new Set(pf.map((p) => p.id)));
+        setInitialCollapseDone(true);
+      }
       // fetch holdings for each portfolio
       const hMap: Record<string, Holding[]> = {};
       await Promise.all(
@@ -185,7 +191,7 @@ export default function DashboardPage() {
     }
 
     setLoading(false);
-  }, [router]);
+  }, [router, initialCollapseDone]);
 
   useEffect(() => {
     fetchData();
