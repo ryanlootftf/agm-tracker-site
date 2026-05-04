@@ -84,6 +84,10 @@ export default function DashboardPage() {
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedEvent, setSelectedEvent] = useState<AGMEvent | null>(null);
+  const [selectedDateMeetings, setSelectedDateMeetings] = useState<{
+    date: string;
+    events: AGMEvent[];
+  } | null>(null);
 
   // Portfolio collapse state
   const [collapsedPfs, setCollapsedPfs] = useState<Set<string>>(new Set());
@@ -559,9 +563,14 @@ export default function DashboardPage() {
                 cells.push(
                   <div
                     key={day}
+                    onClick={() => {
+                      if (dayEvents.length > 0) {
+                        setSelectedDateMeetings({ date: dateStr, events: dayEvents });
+                      }
+                    }}
                     className={`min-h-[80px] p-1 border-t border-l border-border ${
                       isToday ? "bg-today-bg" : ""
-                    }`}
+                    } ${dayEvents.length > 0 ? "cursor-pointer hover:bg-elevated/50" : ""}`}
                   >
                     <div
                       className={`text-xs font-medium mb-1 ${
@@ -575,7 +584,10 @@ export default function DashboardPage() {
                     {dayEvents.map((ev) => (
                       <button
                         key={ev.id}
-                        onClick={() => setSelectedEvent(ev)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedEvent(ev);
+                        }}
                         className="flex items-center gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-elevated transition-colors mb-0.5"
                       >
                         {/* Colour dots for each portfolio holding this stock */}
@@ -610,6 +622,76 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* ---------- Day Meetings List ---------- */}
+      {selectedDateMeetings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedDateMeetings(null)}>
+          <div
+            className="w-full max-w-lg rounded-xl bg-card p-6 shadow-xl ring-1 ring-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-primary">
+                  {new Date(selectedDateMeetings.date + "T00:00:00").toLocaleDateString("en-MY", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </h3>
+                <p className="text-sm text-secondary">
+                  {selectedDateMeetings.events.length} meeting{selectedDateMeetings.events.length > 1 ? "s" : ""}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedDateMeetings(null)}
+                className="text-secondary hover:text-primary transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+              {selectedDateMeetings.events.map((ev) => (
+                <button
+                  key={ev.id}
+                  onClick={() => {
+                    setSelectedDateMeetings(null);
+                    setSelectedEvent(ev);
+                  }}
+                  className="flex items-start gap-3 w-full text-left rounded-lg p-3 hover:bg-elevated transition-colors ring-1 ring-inset ring-border/50"
+                >
+                  {/* Colour dots */}
+                  <div className="flex -space-x-1 shrink-0 mt-0.5">
+                    {(holderMap[ev.stock_code] ?? []).map((h, i) => (
+                      <span
+                        key={i}
+                        className="inline-block h-3 w-3 rounded-full ring-1 ring-card"
+                        style={{ backgroundColor: h.colour }}
+                        title={h.name}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-primary">
+                      {ev.stock_ticker}
+                    </div>
+                    <div className="text-xs text-secondary truncate">
+                      {ev.meeting_type}{ev.meeting_time ? ` · ${ev.meeting_time}` : ""}
+                    </div>
+                    <div className="text-xs text-secondary/60 truncate">
+                      {ev.venue_type}{ev.meeting_location ? ` — ${ev.meeting_location}` : ""}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ---------- Event Detail Popover ---------- */}
       {selectedEvent && (
