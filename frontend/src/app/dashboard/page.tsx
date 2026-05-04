@@ -763,7 +763,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {selectedEvent.meeting_link && (
+            {selectedEvent.meeting_link && selectedEvent.meeting_type?.toLowerCase() === "hybrid" && (
               <a
                 href={selectedEvent.meeting_link}
                 target="_blank"
