@@ -247,8 +247,14 @@ export default function DashboardPage() {
   };
 
   // ---------- Portfolio CRUD ----------
+  const usedColours = new Set(portfolios.map((pf) => pf.colour));
+
   const handleCreatePortfolio = async () => {
     if (!newPortfolioName.trim()) return;
+    if (usedColours.has(newPortfolioColour)) {
+      alert("That colour is already in use by another portfolio. Please pick a different colour.");
+      return;
+    }
     await supabase.from("portfolios").insert({
       user_id: profile!.id,
       name: newPortfolioName.trim(),
@@ -336,12 +342,12 @@ export default function DashboardPage() {
         {/* Portfolios */}
         <div className="mb-8 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-secondary uppercase tracking-wide">
+            <h2 className="text-base font-medium text-secondary uppercase tracking-wide">
               Portfolios
             </h2>
             <button
               onClick={() => setShowAddPortfolio(true)}
-              className="text-sm font-medium text-accent-text hover:brightness-110 transition-colors"
+              className="text-base font-medium text-accent-text hover:brightness-110 transition-colors"
             >
               + Add Portfolio
             </button>
@@ -358,15 +364,15 @@ export default function DashboardPage() {
           {portfolios.map((pf) => (
             <div
               key={pf.id}
-              className="rounded-lg bg-card p-4 shadow-sm ring-1 ring-border"
+              className="rounded-lg bg-card p-3 shadow-sm ring-1 ring-border"
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
                   <span
-                    className="inline-block h-4 w-4 rounded-full"
+                    className="inline-block h-5 w-5 rounded-full"
                     style={{ backgroundColor: pf.colour }}
                   />
-                  <h3 className="text-sm font-semibold text-primary">
+                  <h3 className="text-base font-semibold text-primary">
                     {pf.name}
                   </h3>
                 </div>
@@ -428,26 +434,26 @@ export default function DashboardPage() {
 
               {/* Holdings */}
               {(!collapsedPfs.has(pf.id) && (!holdingsMap[pf.id] || holdingsMap[pf.id].length === 0)) && (
-                <p className="text-xs text-secondary ml-7">
+                <p className="text-sm text-secondary ml-6">
                   No holdings yet.
                 </p>
               )}
 
               {holdingsMap[pf.id]?.length > 0 && (
-                <div className={`ml-7 space-y-1 ${collapsedPfs.has(pf.id) ? "hidden" : ""}`}>
+                <div className={`ml-6 space-y-0.5 ${collapsedPfs.has(pf.id) ? "hidden" : ""}`}>
                   {holdingsMap[pf.id].map((h) => (
                     <button
                       key={h.id}
                       onClick={() => handleOpenHoldingModal(h)}
                       className="flex w-full items-center gap-2 text-left hover:bg-elevated rounded px-1 py-0.5 transition-colors"
                     >
-                      <span className="font-medium text-primary">
+                      <span className="text-sm font-medium text-primary">
                         {h.stocks?.symbol ?? h.stock_code}
                       </span>
-                      <span className="text-secondary text-xs">
+                      <span className="text-secondary text-sm">
                         {h.stocks?.company_name ?? ""}
                       </span>
-                      <span className="ml-auto text-xs text-secondary/50">
+                      <span className="ml-auto text-sm text-secondary/50">
                         {h.shares != null ? `${h.shares.toLocaleString()} shares` : "0 shares"}
                       </span>
                     </button>
@@ -746,18 +752,33 @@ export default function DashboardPage() {
               Colour
             </label>
             <div className="flex flex-wrap gap-2">
-              {PRESET_COLOURS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setNewPortfolioColour(c)}
-                  className={`h-8 w-8 rounded-full transition-all ${
-                    newPortfolioColour === c
-                      ? "ring-2 ring-offset-2 ring-offset-card ring-border scale-110"
-                      : "hover:scale-110"
-                  }`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
+              {PRESET_COLOURS.map((c) => {
+                const isTaken = usedColours.has(c);
+                return (
+                  <button
+                    key={c}
+                    onClick={() => !isTaken && setNewPortfolioColour(c)}
+                    disabled={isTaken}
+                    className={`h-8 w-8 rounded-full transition-all relative ${
+                      isTaken
+                        ? "opacity-30 cursor-not-allowed"
+                        : newPortfolioColour === c
+                          ? "ring-2 ring-offset-2 ring-offset-card ring-border scale-110"
+                          : "hover:scale-110"
+                    }`}
+                    style={{ backgroundColor: c }}
+                    title={isTaken ? "Already in use" : c}
+                  >
+                    {isTaken && (
+                      <span className="absolute inset-0 flex items-center justify-center text-white drop-shadow">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
               <label
                 className={`h-8 w-8 rounded-full bg-elevated cursor-pointer flex items-center justify-center text-xs text-secondary hover:scale-110 transition-all ${
                   !PRESET_COLOURS.includes(newPortfolioColour)
