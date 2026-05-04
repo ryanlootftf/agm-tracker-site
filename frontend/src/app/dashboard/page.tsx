@@ -419,7 +419,7 @@ export default function DashboardPage() {
                   >
                     <svg
                       className={`h-3.5 w-3.5 transition-transform ${
-                        collapsedPfs.has(pf.id) ? "rotate-180" : "rotate-0"
+                        collapsedPfs.has(pf.id) ? "rotate-0" : "rotate-180"
                       }`}
                       fill="none"
                       viewBox="0 0 24 24"
