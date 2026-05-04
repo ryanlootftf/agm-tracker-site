@@ -84,10 +84,7 @@ export default function DashboardPage() {
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedEvent, setSelectedEvent] = useState<AGMEvent | null>(null);
-  const [selectedDateMeetings, setSelectedDateMeetings] = useState<{
-    date: string;
-    events: AGMEvent[];
-  } | null>(null);
+  const [selectedDateList, setSelectedDateList] = useState<string | null>(null);
 
   // Portfolio collapse state
   const [collapsedPfs, setCollapsedPfs] = useState<Set<string>>(new Set());
@@ -529,169 +526,166 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 text-sm">
-            {(() => {
-              const firstDay = new Date(calendarYear, calendarMonth, 1);
-              // 0=Sun, 1=Mon, ... → convert to Mon-based: 0 → 6
-              let startOffset = firstDay.getDay() - 1;
-              if (startOffset < 0) startOffset = 6;
-              const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
-              const today = new Date().toISOString().split("T")[0];
+          {selectedDateList ? (
+            /* ---------- Inline Day List View ---------- */
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <button
+                  onClick={() => setSelectedDateList(null)}
+                  className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+                <div>
+                  <h3 className="text-base font-semibold text-primary">
+                    {new Date(selectedDateList + "T00:00:00").toLocaleDateString("en-MY", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </h3>
+                  <p className="text-xs text-secondary">
+                    {(() => {
+                      const dayEvents = agmEvents.filter((ev) => ev.meeting_date === selectedDateList);
+                      return `${dayEvents.length} meeting${dayEvents.length > 1 ? "s" : ""}`;
+                    })()}
+                  </p>
+                </div>
+              </div>
 
-              // Group events by date
-              const eventsByDate: Record<string, AGMEvent[]> = {};
-              for (const ev of agmEvents) {
-                const d = ev.meeting_date;
-                if (!eventsByDate[d]) eventsByDate[d] = [];
-                eventsByDate[d].push(ev);
-              }
-
-              const cells: React.ReactNode[] = [];
-
-              // Empty leading cells
-              for (let i = 0; i < startOffset; i++) {
-                cells.push(<div key={`empty-${i}`} className="min-h-[80px] p-1" />);
-              }
-
-              // Day cells
-              for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                const dayEvents = eventsByDate[dateStr] ?? [];
-                const isToday = dateStr === today;
-
-                cells.push(
-                  <div
-                    key={day}
-                    onClick={() => {
-                      if (dayEvents.length > 0) {
-                        setSelectedDateMeetings({ date: dateStr, events: dayEvents });
-                      }
-                    }}
-                    className={`min-h-[80px] p-1 border-t border-l border-border ${
-                      isToday ? "bg-today-bg" : ""
-                    } ${dayEvents.length > 0 ? "cursor-pointer hover:bg-elevated/50" : ""}`}
-                  >
-                    <div
-                      className={`text-xs font-medium mb-1 ${
-                        isToday
-                          ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-today-bg text-today-text"
-                          : "text-secondary"
-                      }`}
+              <div className="space-y-2">
+                {agmEvents
+                  .filter((ev) => ev.meeting_date === selectedDateList)
+                  .map((ev) => (
+                    <button
+                      key={ev.id}
+                      onClick={() => {
+                        setSelectedEvent(ev);
+                      }}
+                      className="flex items-start gap-3 w-full text-left rounded-lg p-3 hover:bg-elevated transition-colors ring-1 ring-inset ring-border/50"
                     >
-                      {day}
-                    </div>
-                    {dayEvents.map((ev) => (
-                      <button
-                        key={ev.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEvent(ev);
-                        }}
-                        className="flex items-center gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-elevated transition-colors mb-0.5"
-                      >
-                        {/* Colour dots for each portfolio holding this stock */}
-                        <div className="flex -space-x-0.5 shrink-0">
-                          {(holderMap[ev.stock_code] ?? []).map((h, i) => (
-                            <span
-                              key={i}
-                              className="inline-block h-2 w-2 rounded-full ring-1 ring-card"
-                              style={{ backgroundColor: h.colour }}
-                              title={h.name}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-[11px] font-medium text-primary truncate">
+                      {/* Colour dots */}
+                      <div className="flex -space-x-1 shrink-0 mt-0.5">
+                        {(holderMap[ev.stock_code] ?? []).map((h, i) => (
+                          <span
+                            key={i}
+                            className="inline-block h-3 w-3 rounded-full ring-1 ring-card"
+                            style={{ backgroundColor: h.colour }}
+                            title={h.name}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-primary">
                           {ev.stock_ticker}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                );
-              }
+                        </div>
+                        <div className="text-xs text-secondary truncate">
+                          {ev.meeting_type}{ev.meeting_time ? ` · ${ev.meeting_time}` : ""}
+                        </div>
+                        <div className="text-xs text-secondary/60 truncate">
+                          {ev.venue_type}{ev.meeting_location ? ` — ${ev.meeting_location}` : ""}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 text-sm">
+                {(() => {
+                  const firstDay = new Date(calendarYear, calendarMonth, 1);
+                  let startOffset = firstDay.getDay() - 1;
+                  if (startOffset < 0) startOffset = 6;
+                  const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+                  const today = new Date().toISOString().split("T")[0];
 
-              return cells;
-            })()}
-          </div>
+                  const eventsByDate: Record<string, AGMEvent[]> = {};
+                  for (const ev of agmEvents) {
+                    const d = ev.meeting_date;
+                    if (!eventsByDate[d]) eventsByDate[d] = [];
+                    eventsByDate[d].push(ev);
+                  }
 
-          {/* Empty state */}
-          {agmEvents.length === 0 && (
-            <p className="mt-4 text-center text-xs text-secondary">
-              No upcoming AGM events for your holdings.
-            </p>
+                  const cells: React.ReactNode[] = [];
+
+                  for (let i = 0; i < startOffset; i++) {
+                    cells.push(<div key={`empty-${i}`} className="min-h-[80px] p-1" />);
+                  }
+
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                    const dayEvents = eventsByDate[dateStr] ?? [];
+                    const isToday = dateStr === today;
+
+                    cells.push(
+                      <div
+                        key={day}
+                        onClick={() => {
+                          if (dayEvents.length > 0) {
+                            setSelectedDateList(dateStr);
+                          }
+                        }}
+                        className={`min-h-[80px] p-1 border-t border-l border-border ${
+                          isToday ? "bg-today-bg" : ""
+                        } ${dayEvents.length > 0 ? "cursor-pointer hover:bg-elevated/50" : ""}`}
+                      >
+                        <div
+                          className={`text-xs font-medium mb-1 ${
+                            isToday
+                              ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-today-bg text-today-text"
+                              : "text-secondary"
+                          }`}
+                        >
+                          {day}
+                        </div>
+                        {dayEvents.map((ev) => (
+                          <button
+                            key={ev.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedEvent(ev);
+                            }}
+                            className="flex items-center gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-elevated transition-colors mb-0.5"
+                          >
+                            <div className="flex -space-x-0.5 shrink-0">
+                              {(holderMap[ev.stock_code] ?? []).map((h, i) => (
+                                <span
+                                  key={i}
+                                  className="inline-block h-2 w-2 rounded-full ring-1 ring-card"
+                                  style={{ backgroundColor: h.colour }}
+                                  title={h.name}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-[11px] font-medium text-primary truncate">
+                              {ev.stock_ticker}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  }
+
+                  return cells;
+                })()}
+              </div>
+
+              {/* Empty state */}
+              {agmEvents.length === 0 && (
+                <p className="mt-4 text-center text-xs text-secondary">
+                  No upcoming AGM events for your holdings.
+                </p>
+              )}
+            </>
           )}
         </div>
       </main>
 
-      {/* ---------- Day Meetings List ---------- */}
-      {selectedDateMeetings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedDateMeetings(null)}>
-          <div
-            className="w-full max-w-lg rounded-xl bg-card p-6 shadow-xl ring-1 ring-border"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-primary">
-                  {new Date(selectedDateMeetings.date + "T00:00:00").toLocaleDateString("en-MY", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </h3>
-                <p className="text-sm text-secondary">
-                  {selectedDateMeetings.events.length} meeting{selectedDateMeetings.events.length > 1 ? "s" : ""}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedDateMeetings(null)}
-                className="text-secondary hover:text-primary transition-colors"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {selectedDateMeetings.events.map((ev) => (
-                <button
-                  key={ev.id}
-                  onClick={() => {
-                    setSelectedDateMeetings(null);
-                    setSelectedEvent(ev);
-                  }}
-                  className="flex items-start gap-3 w-full text-left rounded-lg p-3 hover:bg-elevated transition-colors ring-1 ring-inset ring-border/50"
-                >
-                  {/* Colour dots */}
-                  <div className="flex -space-x-1 shrink-0 mt-0.5">
-                    {(holderMap[ev.stock_code] ?? []).map((h, i) => (
-                      <span
-                        key={i}
-                        className="inline-block h-3 w-3 rounded-full ring-1 ring-card"
-                        style={{ backgroundColor: h.colour }}
-                        title={h.name}
-                      />
-                    ))}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-primary">
-                      {ev.stock_ticker}
-                    </div>
-                    <div className="text-xs text-secondary truncate">
-                      {ev.meeting_type}{ev.meeting_time ? ` · ${ev.meeting_time}` : ""}
-                    </div>
-                    <div className="text-xs text-secondary/60 truncate">
-                      {ev.venue_type}{ev.meeting_location ? ` — ${ev.meeting_location}` : ""}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ---------- Event Detail Popover ---------- */}
       {selectedEvent && (
