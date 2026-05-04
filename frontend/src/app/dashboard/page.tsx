@@ -54,6 +54,12 @@ export default function DashboardPage() {
   const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
   const [modalShares, setModalShares] = useState("");
 
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
   // Add portfolio modal state
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
   const [newPortfolioName, setNewPortfolioName] = useState("");
@@ -175,10 +181,14 @@ export default function DashboardPage() {
   const handleDeleteHoldingModal = async () => {
     if (!selectedHolding) return;
     const symbol = selectedHolding.stocks?.symbol ?? selectedHolding.stock_code;
-    if (!confirm(`Remove ${symbol} from this portfolio?`)) return;
-    await supabase.from("holdings").delete().eq("id", selectedHolding.id);
-    handleCloseHoldingModal();
-    fetchData();
+    setConfirmDialog({
+      message: `Remove ${symbol} from this portfolio?`,
+      onConfirm: async () => {
+        await supabase.from("holdings").delete().eq("id", selectedHolding.id);
+        handleCloseHoldingModal();
+        fetchData();
+      },
+    });
   };
 
   // ---------- Portfolio CRUD ----------
@@ -195,11 +205,15 @@ export default function DashboardPage() {
     fetchData();
   };
 
-  const handleDeletePortfolio = async (id: string, name: string) => {
-    if (!confirm(`Delete portfolio "${name}" and all its holdings?`)) return;
-    await supabase.from("holdings").delete().eq("portfolio_id", id);
-    await supabase.from("portfolios").delete().eq("id", id);
-    fetchData();
+  const handleDeletePortfolio = (id: string, name: string) => {
+    setConfirmDialog({
+      message: `Delete portfolio "${name}" and all its holdings?`,
+      onConfirm: async () => {
+        await supabase.from("holdings").delete().eq("portfolio_id", id);
+        await supabase.from("portfolios").delete().eq("id", id);
+        fetchData();
+      },
+    });
   };
 
   // ---------- Add holding ----------
@@ -388,6 +402,32 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* ---------- Confirm Dialog ---------- */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <p className="text-sm text-gray-700">{confirmDialog.message}</p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  confirmDialog.onConfirm();
+                  setConfirmDialog(null);
+                }}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ---------- Add Portfolio Modal ---------- */}
       {showAddPortfolio && (
