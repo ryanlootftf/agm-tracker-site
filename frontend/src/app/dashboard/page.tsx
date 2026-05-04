@@ -50,6 +50,11 @@ export default function DashboardPage() {
   const [searching, setSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Edit/delete holding state
+  const [editingSharesId, setEditingSharesId] = useState<string | null>(null);
+  const [editingSharesValue, setEditingSharesValue] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
   // ---------- Data fetching ----------
   const fetchData = useCallback(async () => {
     const {
@@ -131,6 +136,35 @@ export default function DashboardPage() {
 
     return () => clearTimeout(timer);
   }, [searchTerm, showAddStock]);
+
+  // ---------- Edit shares ----------
+  const handleStartEditShares = (holding: Holding) => {
+    setEditingSharesId(holding.id);
+    setEditingSharesValue(holding.shares?.toString() ?? "");
+    setTimeout(() => editInputRef.current?.focus(), 50);
+  };
+
+  const handleSaveShares = async (holdingId: string) => {
+    const newShares = parseInt(editingSharesValue, 10);
+    if (isNaN(newShares) || newShares < 1) {
+      setEditingSharesId(null);
+      return;
+    }
+    await supabase.from("holdings").update({ shares: newShares }).eq("id", holdingId);
+    setEditingSharesId(null);
+    fetchData();
+  };
+
+  const handleCancelEditShares = () => {
+    setEditingSharesId(null);
+  };
+
+  // ---------- Delete holding ----------
+  const handleDeleteHolding = async (holdingId: string, symbol: string) => {
+    if (!confirm(`Remove ${symbol} from this portfolio?`)) return;
+    await supabase.from("holdings").delete().eq("id", holdingId);
+    fetchData();
+  };
 
   // ---------- Add holding ----------
   const handleAddHolding = async () => {
@@ -273,9 +307,58 @@ export default function DashboardPage() {
                           {h.stocks?.company_name ?? ""}
                         </span>
                       </div>
-                      <span className="text-gray-400 text-xs">
-                        {h.shares != null ? `${h.shares} shares` : ""}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {editingSharesId === h.id ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              ref={editInputRef}
+                              type="number"
+                              min="1"
+                              value={editingSharesValue}
+                              onChange={(e) => setEditingSharesValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveShares(h.id);
+                                if (e.key === "Escape") handleCancelEditShares();
+                              }}
+                              className="w-20 rounded border border-gray-300 px-2 py-0.5 text-xs shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <button
+                              onClick={() => handleSaveShares(h.id)}
+                              className="text-xs text-indigo-600 hover:text-indigo-500 font-medium"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={handleCancelEditShares}
+                              className="text-xs text-gray-400 hover:text-gray-500"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleStartEditShares(h)}
+                            className="text-gray-400 text-xs hover:text-indigo-500 transition-colors"
+                            title="Edit shares"
+                          >
+                            {h.shares != null ? `${h.shares} shares` : "0 shares"}
+                          </button>
+                        )}
+                        <button
+                          onClick={() =>
+                            handleDeleteHolding(
+                              h.id,
+                              h.stocks?.symbol ?? h.stock_code
+                            )
+                          }
+                          className="text-gray-300 hover:text-red-500 transition-colors"
+                          title="Remove stock"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
