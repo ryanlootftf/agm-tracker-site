@@ -21,13 +21,13 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-center text-primary">
           Sign in to AGM Tracker
         </h1>
-        <p className="mt-2 text-sm text-center text-secondary">
+        <p className="mt-2 text-base text-center text-secondary font-medium">
           Sign in with your Google account to get started.
         </p>
 
         <button
           onClick={handleGoogleLogin}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded-md bg-card px-6 py-3 text-sm font-semibold text-primary shadow-sm ring-1 ring-inset ring-border hover:bg-elevated transition-colors"
+          className="mt-8 flex w-full items-center justify-center gap-3 rounded-md bg-card px-6 py-3 text-sm font-bold text-primary shadow-sm ring-1 ring-inset ring-border hover:bg-elevated transition-colors"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
             <path

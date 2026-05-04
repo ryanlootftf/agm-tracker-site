@@ -7,7 +7,7 @@ export default function Home() {
         <h1 className="text-5xl font-bold tracking-tight text-primary sm:text-6xl">
           AGM Meeting Tracker
         </h1>
-        <p className="mt-6 text-lg leading-8 text-secondary">
+        <p className="mt-6 text-xl leading-8 text-secondary font-medium">
           Never miss an AGM again. Track your stock portfolio,
           monitor upcoming meetings, and stay on top of important
           corporate events — all in one place.
@@ -29,7 +29,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="mt-16 text-sm text-secondary">
+      <footer className="mt-16 text-sm font-medium text-secondary">
         AGM Meeting Tracker &copy; {new Date().getFullYear()}
       </footer>
     </div>

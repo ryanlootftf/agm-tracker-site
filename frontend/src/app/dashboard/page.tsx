@@ -326,11 +326,11 @@ export default function DashboardPage() {
       {/* Top navigation bar */}
       <header className="bg-card shadow-sm border-b border-border">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-xl font-semibold text-primary">
+          <h1 className="text-xl font-bold text-primary">
             AGM Meeting Tracker
           </h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-secondary hidden sm:inline">
+            <span className="text-sm font-medium text-secondary hidden sm:inline">
               {profile?.name ?? profile?.email ?? "Signed in"}
             </span>
             <ThemeToggle />
@@ -349,12 +349,12 @@ export default function DashboardPage() {
         {/* Portfolios */}
         <div className="mb-8 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-medium text-secondary uppercase tracking-wide">
+            <h2 className="text-base font-bold text-secondary uppercase tracking-wide">
               Portfolios
             </h2>
             <button
               onClick={() => setShowAddPortfolio(true)}
-              className="text-base font-medium text-accent-text hover:brightness-110 transition-colors"
+              className="text-base font-semibold text-accent-text hover:brightness-110 transition-colors"
             >
               + Add Portfolio
             </button>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
 
           {portfolios.length === 0 && (
             <div className="rounded-lg bg-card p-4 shadow-sm ring-1 ring-border">
-              <p className="text-sm text-secondary">
+              <p className="text-base text-secondary font-medium">
                 No portfolios yet. Create one to get started.
               </p>
             </div>
@@ -379,7 +379,7 @@ export default function DashboardPage() {
                     className="inline-block h-5 w-5 rounded-full"
                     style={{ backgroundColor: pf.colour }}
                   />
-                  <h3 className="text-base font-semibold text-primary">
+                  <h3 className="text-lg font-bold text-primary">
                     {pf.name}
                   </h3>
                 </div>
@@ -441,7 +441,7 @@ export default function DashboardPage() {
 
               {/* Holdings */}
               {(!collapsedPfs.has(pf.id) && (!holdingsMap[pf.id] || holdingsMap[pf.id].length === 0)) && (
-                <p className="text-sm text-secondary ml-6">
+                <p className="text-base font-medium text-secondary ml-6">
                   No holdings yet.
                 </p>
               )}
@@ -454,13 +454,13 @@ export default function DashboardPage() {
                       onClick={() => handleOpenHoldingModal(h)}
                       className="flex w-full items-center gap-2 text-left hover:bg-elevated rounded px-1 py-0.5 transition-colors"
                     >
-                      <span className="text-sm font-medium text-primary">
+                      <span className="text-sm font-semibold text-primary">
                         {h.stocks?.symbol ?? h.stock_code}
                       </span>
-                      <span className="text-secondary text-sm">
+                      <span className="text-secondary text-sm font-medium">
                         {h.stocks?.company_name ?? ""}
                       </span>
-                      <span className="ml-auto text-sm text-secondary/50">
+                      <span className="ml-auto text-sm font-medium text-secondary/50">
                         {h.shares != null ? `${h.shares.toLocaleString()} shares` : "0 shares"}
                       </span>
                     </button>
@@ -476,7 +476,7 @@ export default function DashboardPage() {
         <div className="rounded-lg bg-card p-6 shadow-sm ring-1 ring-border">
           {/* Calendar header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-primary uppercase tracking-wide">
+            <h2 className="text-sm font-bold text-primary uppercase tracking-wide">
               AGM Calendar
             </h2>
             <div className="flex items-center gap-2">
@@ -668,7 +668,7 @@ export default function DashboardPage() {
                                 />
                               ))}
                             </div>
-                            <span className="text-[11px] font-medium text-primary truncate">
+                            <span className="text-xs font-semibold text-primary truncate">
                               {ev.stock_ticker}
                             </span>
                           </button>
@@ -683,7 +683,7 @@ export default function DashboardPage() {
 
               {/* Empty state */}
               {agmEvents.length === 0 && (
-                <p className="mt-4 text-center text-xs text-secondary">
+                <p className="mt-4 text-center text-sm font-medium text-secondary">
                   No upcoming AGM events for your holdings.
                 </p>
               )}
@@ -719,8 +719,8 @@ export default function DashboardPage() {
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-secondary">Date</span>
-                <span className="text-primary font-medium">
+                <span className="text-secondary font-medium">Date</span>
+                <span className="text-primary font-bold">
                   {new Date(selectedEvent.meeting_date + "T00:00:00").toLocaleDateString("en-MY", {
                     weekday: "long",
                     year: "numeric",
@@ -731,22 +731,22 @@ export default function DashboardPage() {
               </div>
               {selectedEvent.meeting_time && (
                 <div className="flex justify-between">
-                  <span className="text-secondary">Time</span>
-                  <span className="text-primary">{selectedEvent.meeting_time}</span>
+                  <span className="text-secondary font-medium">Time</span>
+                  <span className="text-primary font-medium">{selectedEvent.meeting_time}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-secondary">Type</span>
-                <span className="text-primary">{selectedEvent.meeting_type}</span>
+                  <span className="text-secondary font-medium">Type</span>
+                  <span className="text-primary font-medium">{selectedEvent.meeting_type}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-secondary">Venue</span>
-                <span className="text-primary">{selectedEvent.venue_type}</span>
+                  <span className="text-secondary font-medium">Venue</span>
+                  <span className="text-primary font-medium">{selectedEvent.venue_type}</span>
               </div>
               {selectedEvent.meeting_location && (
                 <div className="flex justify-between">
-                  <span className="text-secondary">Location</span>
-                  <span className="text-primary text-right max-w-[200px]">{selectedEvent.meeting_location}</span>
+                  <span className="text-secondary font-medium">Location</span>
+                  <span className="text-primary font-medium text-right max-w-[200px]">{selectedEvent.meeting_location}</span>
                 </div>
               )}
             </div>
@@ -787,7 +787,7 @@ export default function DashboardPage() {
       {confirmDialog && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
           <div className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl ring-1 ring-border">
-            <p className="text-sm text-primary">{confirmDialog.message}</p>
+            <p className="text-base font-medium text-primary">{confirmDialog.message}</p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setConfirmDialog(null)}
@@ -989,10 +989,10 @@ export default function DashboardPage() {
             {/* Results */}
             <div className="mt-2 max-h-48 overflow-y-auto">
               {searching && (
-                <p className="text-xs text-secondary py-2">Searching…</p>
+            <p className="text-sm font-medium text-secondary py-2">Searching…</p>
               )}
               {!searching && searchTerm && searchResults.length === 0 && (
-                <p className="text-xs text-secondary py-2">No results.</p>
+                <p className="text-sm font-medium text-secondary py-2">No results.</p>
               )}
               {searchResults.map((stock) => (
                 <button
