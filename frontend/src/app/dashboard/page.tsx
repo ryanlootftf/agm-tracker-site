@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ---------- Types ----------
 interface Profile {
@@ -297,28 +298,29 @@ export default function DashboardPage() {
   // ---------- Loading ----------
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-sm text-gray-400">Loading…</p>
+      <div className="flex min-h-screen items-center justify-center bg-page">
+        <p className="text-sm text-secondary">Loading…</p>
       </div>
     );
   }
 
   // ---------- Render ----------
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-page">
       {/* Top navigation bar */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-card shadow-sm border-b border-border">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-xl font-semibold text-gray-900">
+          <h1 className="text-xl font-semibold text-primary">
             AGM Meeting Tracker
           </h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-secondary hidden sm:inline">
               {profile?.name ?? profile?.email ?? "Signed in"}
             </span>
+            <ThemeToggle />
             <button
               onClick={handleSignOut}
-              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
+              className="rounded-md bg-elevated px-3 py-1.5 text-sm font-medium text-primary shadow-sm ring-1 ring-inset ring-border hover:bg-elevated/80 transition-colors"
             >
               Sign out
             </button>
@@ -331,20 +333,20 @@ export default function DashboardPage() {
         {/* Portfolios */}
         <div className="mb-8 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+            <h2 className="text-sm font-medium text-secondary uppercase tracking-wide">
               Portfolios
             </h2>
             <button
               onClick={() => setShowAddPortfolio(true)}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+              className="text-sm font-medium text-accent-text hover:brightness-110 transition-colors"
             >
               + Add Portfolio
             </button>
           </div>
 
           {portfolios.length === 0 && (
-            <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200">
-              <p className="text-sm text-gray-400">
+            <div className="rounded-lg bg-card p-4 shadow-sm ring-1 ring-border">
+              <p className="text-sm text-secondary">
                 No portfolios yet. Create one to get started.
               </p>
             </div>
@@ -353,7 +355,7 @@ export default function DashboardPage() {
           {portfolios.map((pf) => (
             <div
               key={pf.id}
-              className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200"
+              className="rounded-lg bg-card p-4 shadow-sm ring-1 ring-border"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -361,7 +363,7 @@ export default function DashboardPage() {
                     className="inline-block h-4 w-4 rounded-full"
                     style={{ backgroundColor: pf.colour }}
                   />
-                  <h3 className="text-sm font-semibold text-gray-900">
+                  <h3 className="text-sm font-semibold text-primary">
                     {pf.name}
                   </h3>
                 </div>
@@ -372,13 +374,13 @@ export default function DashboardPage() {
                       setShowAddStock(true);
                       setTimeout(() => searchInputRef.current?.focus(), 100);
                     }}
-                    className="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                    className="text-xs font-medium text-accent-text hover:brightness-110 transition-colors"
                   >
                     + Add Stock
                   </button>
                   <button
                     onClick={() => handleDeletePortfolio(pf.id, pf.name)}
-                    className="text-gray-300 hover:text-red-500 transition-colors"
+                    className="text-secondary/40 hover:text-red-400 transition-colors"
                     title="Delete portfolio"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -390,7 +392,7 @@ export default function DashboardPage() {
 
               {/* Holdings */}
               {(!holdingsMap[pf.id] || holdingsMap[pf.id].length === 0) && (
-                <p className="text-xs text-gray-400 ml-7">
+                <p className="text-xs text-secondary ml-7">
                   No holdings yet.
                 </p>
               )}
@@ -404,16 +406,16 @@ export default function DashboardPage() {
                     >
                       <button
                         onClick={() => handleOpenHoldingModal(h)}
-                        className="flex items-center gap-2 text-left hover:bg-gray-50 rounded px-1 py-0.5 transition-colors"
+                        className="flex items-center gap-2 text-left hover:bg-elevated rounded px-1 py-0.5 transition-colors"
                       >
-                        <span className="font-medium text-gray-900">
+                        <span className="font-medium text-primary">
                           {h.stocks?.symbol ?? h.stock_code}
                         </span>
-                        <span className="text-gray-500">
+                        <span className="text-secondary">
                           {h.stocks?.company_name ?? ""}
                         </span>
                       </button>
-                      <span className="text-gray-400 text-xs">
+                      <span className="text-secondary text-xs">
                         {h.shares != null ? `${h.shares} shares` : "0 shares"}
                       </span>
                     </div>
@@ -425,10 +427,10 @@ export default function DashboardPage() {
         </div>
 
         {/* ---------- AGM Calendar ---------- */}
-        <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
+        <div className="rounded-lg bg-card p-6 shadow-sm ring-1 ring-border">
           {/* Calendar header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-primary uppercase tracking-wide">
               AGM Calendar
             </h2>
             <div className="flex items-center gap-3">
@@ -441,13 +443,13 @@ export default function DashboardPage() {
                     setCalendarMonth(calendarMonth - 1);
                   }
                 }}
-                className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
               </button>
-              <span className="text-sm font-medium text-gray-700 min-w-[120px] text-center">
+              <span className="text-sm font-medium text-primary min-w-[120px] text-center">
                 {new Date(calendarYear, calendarMonth).toLocaleString("default", { month: "long", year: "numeric" })}
               </span>
               <button
@@ -459,7 +461,7 @@ export default function DashboardPage() {
                     setCalendarMonth(calendarMonth + 1);
                   }
                 }}
-                className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -469,7 +471,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Day-of-week headers */}
-          <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-400 mb-2">
+          <div className="grid grid-cols-7 text-center text-xs font-medium text-secondary mb-2">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
               <div key={d} className="py-1">{d}</div>
             ))}
@@ -509,15 +511,15 @@ export default function DashboardPage() {
                 cells.push(
                   <div
                     key={day}
-                    className={`min-h-[80px] p-1 border-t border-l border-gray-100 ${
-                      isToday ? "bg-indigo-50/60" : ""
+                    className={`min-h-[80px] p-1 border-t border-l border-border ${
+                      isToday ? "bg-today-bg" : ""
                     }`}
                   >
                     <div
                       className={`text-xs font-medium mb-1 ${
                         isToday
-                          ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white"
-                          : "text-gray-500"
+                          ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-today-bg text-today-text"
+                          : "text-secondary"
                       }`}
                     >
                       {day}
@@ -526,20 +528,20 @@ export default function DashboardPage() {
                       <button
                         key={ev.id}
                         onClick={() => setSelectedEvent(ev)}
-                        className="flex items-center gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-gray-100 transition-colors mb-0.5"
+                        className="flex items-center gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-elevated transition-colors mb-0.5"
                       >
                         {/* Colour dots for each portfolio holding this stock */}
                         <div className="flex -space-x-0.5 shrink-0">
                           {(holderMap[ev.stock_code] ?? []).map((h, i) => (
                             <span
                               key={i}
-                              className="inline-block h-2 w-2 rounded-full ring-1 ring-white"
+                              className="inline-block h-2 w-2 rounded-full ring-1 ring-card"
                               style={{ backgroundColor: h.colour }}
                               title={h.name}
                             />
                           ))}
                         </div>
-                        <span className="text-[11px] font-medium text-gray-700 truncate">
+                        <span className="text-[11px] font-medium text-primary truncate">
                           {ev.stock_ticker}
                         </span>
                       </button>
@@ -554,7 +556,7 @@ export default function DashboardPage() {
 
           {/* Empty state */}
           {agmEvents.length === 0 && (
-            <p className="mt-4 text-center text-xs text-gray-400">
+            <p className="mt-4 text-center text-xs text-secondary">
               No upcoming AGM events for your holdings.
             </p>
           )}
@@ -563,21 +565,21 @@ export default function DashboardPage() {
 
       {/* ---------- Event Detail Popover ---------- */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setSelectedEvent(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedEvent(null)}>
           <div
-            className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl"
+            className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl ring-1 ring-border"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-primary">
                   {selectedEvent.stock_ticker}
                 </h3>
-                <p className="text-sm text-gray-500">{selectedEvent.stock_code}</p>
+                <p className="text-sm text-secondary">{selectedEvent.stock_code}</p>
               </div>
               <button
                 onClick={() => setSelectedEvent(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-secondary hover:text-primary transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -587,8 +589,8 @@ export default function DashboardPage() {
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">Date</span>
-                <span className="text-gray-900 font-medium">
+                <span className="text-secondary">Date</span>
+                <span className="text-primary font-medium">
                   {new Date(selectedEvent.meeting_date + "T00:00:00").toLocaleDateString("en-MY", {
                     weekday: "long",
                     year: "numeric",
@@ -599,30 +601,30 @@ export default function DashboardPage() {
               </div>
               {selectedEvent.meeting_time && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Time</span>
-                  <span className="text-gray-900">{selectedEvent.meeting_time}</span>
+                  <span className="text-secondary">Time</span>
+                  <span className="text-primary">{selectedEvent.meeting_time}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-500">Type</span>
-                <span className="text-gray-900">{selectedEvent.meeting_type}</span>
+                <span className="text-secondary">Type</span>
+                <span className="text-primary">{selectedEvent.meeting_type}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Venue</span>
-                <span className="text-gray-900">{selectedEvent.venue_type}</span>
+                <span className="text-secondary">Venue</span>
+                <span className="text-primary">{selectedEvent.venue_type}</span>
               </div>
               {selectedEvent.meeting_location && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Location</span>
-                  <span className="text-gray-900 text-right max-w-[200px]">{selectedEvent.meeting_location}</span>
+                  <span className="text-secondary">Location</span>
+                  <span className="text-primary text-right max-w-[200px]">{selectedEvent.meeting_location}</span>
                 </div>
               )}
             </div>
 
             {/* Portfolios holding this stock */}
             {(holderMap[selectedEvent.stock_code] ?? []).length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Held by portfolios</p>
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-xs font-medium text-secondary uppercase tracking-wide mb-2">Held by portfolios</p>
                 <div className="flex flex-wrap gap-2">
                   {(holderMap[selectedEvent.stock_code] ?? []).map((h, i) => (
                     <span
@@ -642,7 +644,7 @@ export default function DashboardPage() {
                 href={selectedEvent.meeting_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 block w-full rounded-md bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white shadow-sm hover:bg-indigo-500 transition-colors"
+                className="mt-4 block w-full rounded-md bg-accent-bg px-4 py-2 text-center text-sm font-medium text-accent-text shadow-sm hover:brightness-110 transition-colors"
               >
                 Open Meeting Link
               </a>
@@ -653,13 +655,13 @@ export default function DashboardPage() {
 
       {/* ---------- Confirm Dialog ---------- */}
       {confirmDialog && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <p className="text-sm text-gray-700">{confirmDialog.message}</p>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl ring-1 ring-border">
+            <p className="text-sm text-primary">{confirmDialog.message}</p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setConfirmDialog(null)}
-                className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                className="rounded-md bg-elevated px-4 py-2 text-sm font-medium text-primary shadow-sm ring-1 ring-inset ring-border hover:brightness-110 transition-colors"
               >
                 Cancel
               </button>
@@ -668,7 +670,7 @@ export default function DashboardPage() {
                   confirmDialog.onConfirm();
                   setConfirmDialog(null);
                 }}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-500"
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-500 transition-colors"
               >
                 Delete
               </button>
@@ -679,13 +681,13 @@ export default function DashboardPage() {
 
       {/* ---------- Add Portfolio Modal ---------- */}
       {showAddPortfolio && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl ring-1 ring-border">
+            <h3 className="text-lg font-semibold text-primary mb-4">
               Create Portfolio
             </h3>
 
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-primary mb-1">
               Portfolio name
             </label>
             <input
@@ -694,11 +696,11 @@ export default function DashboardPage() {
               onChange={(e) => setNewPortfolioName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleCreatePortfolio(); }}
               placeholder="e.g. Retirement Fund"
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="block w-full rounded-md border border-border bg-elevated px-3 py-2 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
               autoFocus
             />
 
-            <label className="block text-sm font-medium text-gray-700 mt-4 mb-2">
+            <label className="block text-sm font-medium text-primary mt-4 mb-2">
               Colour
             </label>
             <div className="flex flex-wrap gap-2">
@@ -708,16 +710,16 @@ export default function DashboardPage() {
                   onClick={() => setNewPortfolioColour(c)}
                   className={`h-8 w-8 rounded-full transition-all ${
                     newPortfolioColour === c
-                      ? "ring-2 ring-offset-2 ring-gray-400 scale-110"
+                      ? "ring-2 ring-offset-2 ring-offset-card ring-border scale-110"
                       : "hover:scale-110"
                   }`}
                   style={{ backgroundColor: c }}
                 />
               ))}
               <label
-                className={`h-8 w-8 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 cursor-pointer flex items-center justify-center text-xs text-gray-500 hover:scale-110 transition-all ${
+                className={`h-8 w-8 rounded-full bg-elevated cursor-pointer flex items-center justify-center text-xs text-secondary hover:scale-110 transition-all ${
                   !PRESET_COLOURS.includes(newPortfolioColour)
-                    ? "ring-2 ring-offset-2 ring-gray-400 scale-110"
+                    ? "ring-2 ring-offset-2 ring-offset-card ring-border scale-110"
                     : ""
                 }`}
               >
@@ -738,14 +740,14 @@ export default function DashboardPage() {
                   setNewPortfolioName("");
                   setNewPortfolioColour("#6366F1");
                 }}
-                className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                className="rounded-md bg-elevated px-4 py-2 text-sm font-medium text-primary shadow-sm ring-1 ring-inset ring-border hover:brightness-110 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreatePortfolio}
                 disabled={!newPortfolioName.trim()}
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-md bg-accent-bg px-4 py-2 text-sm font-medium text-accent-text shadow-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Create
               </button>
@@ -756,28 +758,28 @@ export default function DashboardPage() {
 
       {/* ---------- Manage Holding Modal ---------- */}
       {selectedHolding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl ring-1 ring-border">
+            <h3 className="text-lg font-semibold text-primary mb-4">
               Manage Holding
             </h3>
 
             <div className="space-y-3 text-sm">
               <div>
-                <span className="font-medium text-gray-500">Symbol:</span>{" "}
-                <span className="text-gray-900">{selectedHolding.stocks?.symbol ?? selectedHolding.stock_code}</span>
+                <span className="font-medium text-secondary">Symbol:</span>{" "}
+                <span className="text-primary">{selectedHolding.stocks?.symbol ?? selectedHolding.stock_code}</span>
               </div>
               <div>
-                <span className="font-medium text-gray-500">Company:</span>{" "}
-                <span className="text-gray-900">{selectedHolding.stocks?.company_name ?? "—"}</span>
+                <span className="font-medium text-secondary">Company:</span>{" "}
+                <span className="text-primary">{selectedHolding.stocks?.company_name ?? "—"}</span>
               </div>
               <div>
-                <span className="font-medium text-gray-500">Stock Code:</span>{" "}
-                <span className="text-gray-900">{selectedHolding.stock_code}</span>
+                <span className="font-medium text-secondary">Stock Code:</span>{" "}
+                <span className="text-primary">{selectedHolding.stock_code}</span>
               </div>
             </div>
 
-            <label className="block text-sm font-medium text-gray-700 mt-5 mb-1">
+            <label className="block text-sm font-medium text-primary mt-5 mb-1">
               Number of shares
             </label>
             <input
@@ -785,27 +787,27 @@ export default function DashboardPage() {
               min="1"
               value={modalShares}
               onChange={(e) => setModalShares(e.target.value)}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="block w-full rounded-md border border-border bg-elevated px-3 py-2 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
             />
 
             <div className="mt-6 flex items-center justify-between">
               <button
                 onClick={handleDeleteHoldingModal}
-                className="rounded-md bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors"
+                className="rounded-md bg-red-900/20 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/40 transition-colors"
               >
                 Delete
               </button>
               <div className="flex gap-3">
                 <button
                   onClick={handleCloseHoldingModal}
-                  className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                  className="rounded-md bg-elevated px-4 py-2 text-sm font-medium text-primary shadow-sm ring-1 ring-inset ring-border hover:brightness-110 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveSharesModal}
                   disabled={!modalShares}
-                  className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-md bg-accent-bg px-4 py-2 text-sm font-medium text-accent-text shadow-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Save
                 </button>
@@ -817,14 +819,14 @@ export default function DashboardPage() {
 
       {/* ---------- Add Stock Modal ---------- */}
       {showAddStock && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl ring-1 ring-border">
+            <h3 className="text-lg font-semibold text-primary mb-4">
               Add Stock to Portfolio
             </h3>
 
             {/* Search */}
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-primary mb-1">
               Search by symbol or company name
             </label>
             <input
@@ -836,16 +838,16 @@ export default function DashboardPage() {
                 setSelectedStock(null);
               }}
               placeholder="e.g. 0001, MAYBANK, or Scomnet"
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="block w-full rounded-md border border-border bg-elevated px-3 py-2 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
             />
 
             {/* Results */}
             <div className="mt-2 max-h-48 overflow-y-auto">
               {searching && (
-                <p className="text-xs text-gray-400 py-2">Searching…</p>
+                <p className="text-xs text-secondary py-2">Searching…</p>
               )}
               {!searching && searchTerm && searchResults.length === 0 && (
-                <p className="text-xs text-gray-400 py-2">No results.</p>
+                <p className="text-xs text-secondary py-2">No results.</p>
               )}
               {searchResults.map((stock) => (
                 <button
@@ -857,19 +859,19 @@ export default function DashboardPage() {
                     );
                     setSearchResults([]);
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-indigo-50 transition-colors ${
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                     selectedStock?.stock_code === stock.stock_code
-                      ? "bg-indigo-50 ring-1 ring-indigo-300"
-                      : ""
+                      ? "bg-accent-bg ring-1 ring-accent-text"
+                      : "hover:bg-elevated"
                   }`}
                 >
-                  <span className="font-bold text-gray-900">
+                  <span className="font-bold text-primary">
                     {stock.symbol}
                   </span>
-                  <span className="ml-2 text-gray-400 text-xs">
+                  <span className="ml-2 text-secondary text-xs">
                     {stock.stock_code}
                   </span>
-                  <span className="ml-2 text-gray-500">
+                  <span className="ml-2 text-secondary">
                     {stock.company_name}
                   </span>
                 </button>
@@ -877,7 +879,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Shares */}
-            <label className="block text-sm font-medium text-gray-700 mt-4 mb-1">
+            <label className="block text-sm font-medium text-primary mt-4 mb-1">
               Number of shares
             </label>
             <input
@@ -886,7 +888,7 @@ export default function DashboardPage() {
               value={shares}
               onChange={(e) => setShares(e.target.value)}
               placeholder="e.g. 1000"
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="block w-full rounded-md border border-border bg-elevated px-3 py-2 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
             />
 
             {/* Actions */}
@@ -898,14 +900,14 @@ export default function DashboardPage() {
                   setSelectedStock(null);
                   setShares("");
                 }}
-                className="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                className="rounded-md bg-elevated px-4 py-2 text-sm font-medium text-primary shadow-sm ring-1 ring-inset ring-border hover:brightness-110 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddHolding}
                 disabled={!selectedStock || !shares}
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-md bg-accent-bg px-4 py-2 text-sm font-medium text-accent-text shadow-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Add to Portfolio
               </button>

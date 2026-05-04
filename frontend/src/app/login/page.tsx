@@ -16,18 +16,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg ring-1 ring-gray-200">
-        <h1 className="text-2xl font-bold text-center text-gray-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-page p-8">
+      <div className="w-full max-w-sm rounded-xl bg-card p-8 shadow-lg ring-1 ring-border">
+        <h1 className="text-2xl font-bold text-center text-primary">
           Sign in to AGM Tracker
         </h1>
-        <p className="mt-2 text-sm text-center text-gray-500">
+        <p className="mt-2 text-sm text-center text-secondary">
           Sign in with your Google account to get started.
         </p>
 
         <button
           onClick={handleGoogleLogin}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
+          className="mt-8 flex w-full items-center justify-center gap-3 rounded-md bg-card px-6 py-3 text-sm font-semibold text-primary shadow-sm ring-1 ring-inset ring-border hover:bg-elevated transition-colors"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
             <path
