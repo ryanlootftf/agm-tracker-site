@@ -118,11 +118,11 @@ export default function DashboardPage() {
 
     const timer = setTimeout(async () => {
       setSearching(true);
-      const term = `%${searchTerm.toUpperCase()}%`;
+      const term = `*${searchTerm.toUpperCase()}*`;
       const { data } = await supabase
         .from("stocks")
         .select("stock_code, symbol, company_name")
-        .or(`symbol.ilike.${term},company_name.ilike.${term}`)
+        .or(`symbol.ilike.${term},company_name.ilike.${term},stock_code.ilike.${term}`)
         .eq("is_active", true)
         .limit(10);
       if (data) setSearchResults(data);
@@ -334,7 +334,7 @@ export default function DashboardPage() {
                 setSearchTerm(e.target.value);
                 setSelectedStock(null);
               }}
-              placeholder="e.g. MAYBANK or 1155"
+              placeholder="e.g. 0001, MAYBANK, or Scomnet"
               className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
 
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                   onClick={() => {
                     setSelectedStock(stock);
                     setSearchTerm(
-                      `${stock.symbol} — ${stock.company_name}`
+                      `${stock.symbol}`
                     );
                     setSearchResults([]);
                   }}
@@ -362,8 +362,11 @@ export default function DashboardPage() {
                       : ""
                   }`}
                 >
-                  <span className="font-medium text-gray-900">
+                  <span className="font-bold text-gray-900">
                     {stock.symbol}
+                  </span>
+                  <span className="ml-2 text-gray-400 text-xs">
+                    {stock.stock_code}
                   </span>
                   <span className="ml-2 text-gray-500">
                     {stock.company_name}

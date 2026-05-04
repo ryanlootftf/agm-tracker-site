@@ -63,12 +63,13 @@ create index idx_holdings_stock_code on public.holdings(stock_code);
 -- Row Level Security
 -- ============================================================
 
--- stocks: all authenticated users can read; only service_role can write
+-- stocks: anyone can read (public reference data); only service_role can write
 alter table public.stocks enable row level security;
 
-create policy "stocks_auth_select"
+create policy "stocks_public_select"
   on public.stocks for select
-  using (auth.role() = 'authenticated');
+  to anon, authenticated
+  using (true);
 
 -- agm_events: all authenticated users can read; only service_role can write
 alter table public.agm_events enable row level security;
