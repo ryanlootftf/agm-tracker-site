@@ -458,7 +458,11 @@ export default function DashboardPage() {
                     <div
                       key={h.id}
                       className="contents cursor-pointer"
-                      onClick={() => setSelectedStockForDetail(h)}
+                      onClick={() => {
+                        const event = agmEvents.find((ev) => ev.stock_code === h.stock_code);
+                        if (event) setSelectedEvent(event);
+                        else setSelectedStockForDetail(h);
+                      }}
                     >
                       {/* Ticker */}
                       <span className="text-base font-bold text-primary px-1 py-0.5 rounded hover:bg-elevated transition-colors">
