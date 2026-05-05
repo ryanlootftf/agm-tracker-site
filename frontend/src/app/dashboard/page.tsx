@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
+import FeedbackButton from "@/components/FeedbackButton";
 
 // ---------- Types ----------
 interface Profile {
@@ -1209,6 +1210,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Floating Feedback Button */}
+      <FeedbackButton />
     </div>
   );
 }
