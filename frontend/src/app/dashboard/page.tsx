@@ -587,17 +587,18 @@ export default function DashboardPage() {
                           />
                         ))}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-base font-bold text-primary">
-                          {ev.stock_ticker}
-                        </div>
-                        <div className="text-xs text-secondary truncate">
-                          {ev.meeting_type}{ev.meeting_time ? ` · ${ev.meeting_time}` : ""}
-                        </div>
-                        <div className="text-xs text-secondary/60 truncate">
-                          {ev.venue_type}{ev.meeting_location ? ` — ${ev.meeting_location}` : ""}
-                        </div>
-                      </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-base font-bold text-primary">
+                              {ev.meeting_time && <span>{ev.meeting_time} </span>}
+                              {ev.stock_ticker}
+                            </div>
+                            <div className="text-xs text-secondary truncate">
+                              {ev.meeting_type}
+                            </div>
+                            <div className="text-xs text-secondary/60 truncate">
+                              {ev.venue_type}{ev.meeting_location ? ` — ${ev.meeting_location}` : ""}
+                            </div>
+                          </div>
                     </button>
                   ))}
               </div>
@@ -677,15 +678,15 @@ export default function DashboardPage() {
                                 />
                               ))}
                             </div>
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-bold text-primary truncate">
-                                {ev.stock_ticker}
-                              </span>
+                            <div className="flex items-center gap-1 min-w-0">
                               {ev.meeting_time && (
-                                <span className="text-[10px] text-secondary/70 truncate">
+                                <span className="text-sm font-bold text-primary shrink-0">
                                   {ev.meeting_time}
                                 </span>
                               )}
+                              <span className="text-sm font-bold text-primary truncate">
+                                {ev.stock_ticker}
+                              </span>
                             </div>
                           </button>
                         ))}
