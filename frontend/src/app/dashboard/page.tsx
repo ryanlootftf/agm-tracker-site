@@ -69,6 +69,16 @@ export default function DashboardPage() {
   const [searching, setSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Bulk add stock modal state
+  const [showBulkAddStock, setShowBulkAddStock] = useState(false);
+  const [bulkSearchTerm, setBulkSearchTerm] = useState("");
+  const [bulkSearchResults, setBulkSearchResults] = useState<Stock[]>([]);
+  const [bulkSelectedStock, setBulkSelectedStock] = useState<Stock | null>(null);
+  const [bulkShares, setBulkShares] = useState("");
+  const [bulkSearching, setBulkSearching] = useState(false);
+  const [bulkSelectedPortfolioIds, setBulkSelectedPortfolioIds] = useState<Set<string>>(new Set());
+  const bulkSearchInputRef = useRef<HTMLInputElement>(null);
+
   // Stock detail modal state
   const [selectedStockForDetail, setSelectedStockForDetail] = useState<Holding | null>(null);
 
@@ -230,6 +240,29 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, [searchTerm, showAddStock]);
 
+  // ---------- Bulk stock search ----------
+  useEffect(() => {
+    if (!showBulkAddStock || !bulkSearchTerm || bulkSearchTerm.length < 1) {
+      setBulkSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setBulkSearching(true);
+      const term = `*${bulkSearchTerm.toUpperCase()}*`;
+      const { data } = await supabase
+        .from("stocks")
+        .select("stock_code, symbol, company_name")
+        .or(`symbol.ilike.${term},company_name.ilike.${term},stock_code.ilike.${term}`)
+        .eq("is_active", true)
+        .limit(10);
+      if (data) setBulkSearchResults(data);
+      setBulkSearching(false);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [bulkSearchTerm, showBulkAddStock]);
+
   // ---------- Manage holding modal ----------
   const handleOpenHoldingModal = (holding: Holding) => {
     setSelectedHolding(holding);
@@ -315,6 +348,36 @@ export default function DashboardPage() {
     }
   };
 
+  // ---------- Bulk add holding ----------
+  const handleBulkAddHolding = async () => {
+    if (!bulkSelectedStock || !bulkShares || bulkSelectedPortfolioIds.size === 0) return;
+
+    const sharesNum = parseInt(bulkShares, 10);
+    if (isNaN(sharesNum) || sharesNum < 1) return;
+
+    let hasError = false;
+    for (const portfolioId of bulkSelectedPortfolioIds) {
+      const { error } = await supabase.from("holdings").insert({
+        portfolio_id: portfolioId,
+        stock_code: bulkSelectedStock.stock_code,
+        shares: sharesNum,
+      });
+      if (error) {
+        console.error(`Bulk add error for portfolio ${portfolioId}:`, error.message);
+        hasError = true;
+      }
+    }
+
+    if (!hasError) {
+      setShowBulkAddStock(false);
+      setBulkSearchTerm("");
+      setBulkSelectedStock(null);
+      setBulkShares("");
+      setBulkSelectedPortfolioIds(new Set());
+      fetchData();
+    }
+  };
+
   // ---------- Sign out ----------
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -362,12 +425,24 @@ export default function DashboardPage() {
             <h2 className="text-base font-bold text-secondary uppercase tracking-wide">
               Portfolios
             </h2>
-            <button
-              onClick={() => setShowAddPortfolio(true)}
-              className="text-base font-semibold text-accent-text hover:brightness-110 transition-colors"
-            >
-              + Add Portfolio
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAddPortfolio(true)}
+                className="text-base font-semibold text-accent-text hover:brightness-110 transition-colors"
+              >
+                + Add Portfolio
+              </button>
+              <span className="text-border select-none text-xs">|</span>
+              <button
+                onClick={() => {
+                  setShowBulkAddStock(true);
+                  setTimeout(() => bulkSearchInputRef.current?.focus(), 100);
+                }}
+                className="text-base font-semibold text-accent-text hover:brightness-110 transition-colors"
+              >
+                Bulk Add
+              </button>
+            </div>
           </div>
 
           {portfolios.length === 0 && (
@@ -1209,6 +1284,144 @@ export default function DashboardPage() {
                 className="rounded-md bg-accent-bg px-4 py-2 text-sm font-medium text-accent-text shadow-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Add to Portfolio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Bulk Add Stock Modal ---------- */}
+      {showBulkAddStock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl ring-1 ring-border max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold text-primary mb-4">
+              Bulk Add Stock
+            </h3>
+
+            {/* Search */}
+            <label className="block text-sm font-medium text-primary mb-1">
+              Search by symbol or company name
+            </label>
+            <input
+              ref={bulkSearchInputRef}
+              type="text"
+              value={bulkSearchTerm}
+              onChange={(e) => {
+                setBulkSearchTerm(e.target.value);
+                setBulkSelectedStock(null);
+              }}
+              placeholder="e.g. 0001, MAYBANK, or Scomnet"
+              className="block w-full rounded-md border border-border bg-elevated px-3 py-2 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
+            />
+
+            {/* Results */}
+            <div className="mt-2 max-h-48 overflow-y-auto">
+              {bulkSearching && (
+                <p className="text-sm font-medium text-secondary py-2">Searching…</p>
+              )}
+              {!bulkSearching && bulkSearchTerm && bulkSearchResults.length === 0 && (
+                <p className="text-sm font-medium text-secondary py-2">No results.</p>
+              )}
+              {bulkSearchResults.map((stock) => (
+                <button
+                  key={stock.stock_code}
+                  onClick={() => {
+                    setBulkSelectedStock(stock);
+                    setBulkSearchTerm(`${stock.symbol}`);
+                    setBulkSearchResults([]);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                    bulkSelectedStock?.stock_code === stock.stock_code
+                      ? "bg-accent-bg ring-1 ring-accent-text"
+                      : "hover:bg-elevated"
+                  }`}
+                >
+                  <span className="font-bold text-primary">
+                    {stock.symbol}
+                  </span>
+                  <span className="ml-2 text-secondary text-xs">
+                    {stock.stock_code}
+                  </span>
+                  <span className="ml-2 text-secondary">
+                    {stock.company_name}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Shares */}
+            <label className="block text-sm font-medium text-primary mt-4 mb-1">
+              Number of shares (same for all selected portfolios)
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={bulkShares}
+              onChange={(e) => setBulkShares(e.target.value)}
+              placeholder="e.g. 1000"
+              className="block w-full rounded-md border border-border bg-elevated px-3 py-2 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
+            />
+
+            {/* Portfolio checklist */}
+            <label className="block text-sm font-medium text-primary mt-4 mb-2">
+              Select portfolios
+            </label>
+            {portfolios.length === 0 && (
+              <p className="text-sm font-medium text-secondary">No portfolios yet.</p>
+            )}
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {portfolios.map((pf) => {
+                const isSelected = bulkSelectedPortfolioIds.has(pf.id);
+                return (
+                  <label
+                    key={pf.id}
+                    className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors ${
+                      isSelected ? "bg-accent-bg ring-1 ring-accent-text" : "hover:bg-elevated"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {
+                        setBulkSelectedPortfolioIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(pf.id)) next.delete(pf.id);
+                          else next.add(pf.id);
+                          return next;
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-border text-accent-text focus:ring-accent-text"
+                    />
+                    <span
+                      className="inline-block h-3 w-3 rounded-full shrink-0"
+                      style={{ backgroundColor: pf.colour }}
+                    />
+                    <span className="font-medium text-primary">{pf.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {/* Actions */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowBulkAddStock(false);
+                  setBulkSearchTerm("");
+                  setBulkSelectedStock(null);
+                  setBulkShares("");
+                  setBulkSelectedPortfolioIds(new Set());
+                }}
+                className="rounded-md bg-elevated px-4 py-2 text-sm font-medium text-primary shadow-sm ring-1 ring-inset ring-border hover:brightness-110 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkAddHolding}
+                disabled={!bulkSelectedStock || !bulkShares || bulkSelectedPortfolioIds.size === 0}
+                className="rounded-md bg-accent-bg px-4 py-2 text-sm font-medium text-accent-text shadow-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Add to Portfolios
               </button>
             </div>
           </div>
