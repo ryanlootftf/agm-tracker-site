@@ -74,9 +74,8 @@ export default function DashboardPage() {
   const [bulkSearchTerm, setBulkSearchTerm] = useState("");
   const [bulkSearchResults, setBulkSearchResults] = useState<Stock[]>([]);
   const [bulkSelectedStock, setBulkSelectedStock] = useState<Stock | null>(null);
-  const [bulkShares, setBulkShares] = useState("");
   const [bulkSearching, setBulkSearching] = useState(false);
-  const [bulkSelectedPortfolioIds, setBulkSelectedPortfolioIds] = useState<Set<string>>(new Set());
+  const [bulkPortfolioShares, setBulkPortfolioShares] = useState<Record<string, string>>({});
   const bulkSearchInputRef = useRef<HTMLInputElement>(null);
 
   // Stock detail modal state
@@ -350,17 +349,19 @@ export default function DashboardPage() {
 
   // ---------- Bulk add holding ----------
   const handleBulkAddHolding = async () => {
-    if (!bulkSelectedStock || !bulkShares || bulkSelectedPortfolioIds.size === 0) return;
+    if (!bulkSelectedStock) return;
 
-    const sharesNum = parseInt(bulkShares, 10);
-    if (isNaN(sharesNum) || sharesNum < 1) return;
+    const entries = Object.entries(bulkPortfolioShares).filter(
+      ([, shares]) => shares.trim() !== "" && parseInt(shares, 10) > 0
+    );
+    if (entries.length === 0) return;
 
     let hasError = false;
-    for (const portfolioId of bulkSelectedPortfolioIds) {
+    for (const [portfolioId, sharesStr] of entries) {
       const { error } = await supabase.from("holdings").insert({
         portfolio_id: portfolioId,
         stock_code: bulkSelectedStock.stock_code,
-        shares: sharesNum,
+        shares: parseInt(sharesStr, 10),
       });
       if (error) {
         console.error(`Bulk add error for portfolio ${portfolioId}:`, error.message);
@@ -372,8 +373,7 @@ export default function DashboardPage() {
       setShowBulkAddStock(false);
       setBulkSearchTerm("");
       setBulkSelectedStock(null);
-      setBulkShares("");
-      setBulkSelectedPortfolioIds(new Set());
+      setBulkPortfolioShares({});
       fetchData();
     }
   };
@@ -1349,58 +1349,74 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* Shares */}
-            <label className="block text-sm font-medium text-primary mt-4 mb-1">
-              Number of shares (same for all selected portfolios)
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={bulkShares}
-              onChange={(e) => setBulkShares(e.target.value)}
-              placeholder="e.g. 1000"
-              className="block w-full rounded-md border border-border bg-elevated px-3 py-2 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
-            />
-
-            {/* Portfolio checklist */}
+            {/* Portfolio toggle chips with per-portfolio shares */}
             <label className="block text-sm font-medium text-primary mt-4 mb-2">
               Select portfolios
             </label>
             {portfolios.length === 0 && (
               <p className="text-sm font-medium text-secondary">No portfolios yet.</p>
             )}
-            <div className="space-y-2 max-h-40 overflow-y-auto">
+
+            {/* Toggle chips row */}
+            <div className="flex flex-wrap gap-2 mb-2">
               {portfolios.map((pf) => {
-                const isSelected = bulkSelectedPortfolioIds.has(pf.id);
+                const isToggled = bulkPortfolioShares[pf.id] !== undefined;
                 return (
-                  <label
+                  <button
                     key={pf.id}
-                    className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors ${
-                      isSelected ? "bg-accent-bg ring-1 ring-accent-text" : "hover:bg-elevated"
+                    type="button"
+                    onClick={() => {
+                      setBulkPortfolioShares((prev) => {
+                        const next = { ...prev };
+                        if (next[pf.id] !== undefined) {
+                          delete next[pf.id];
+                        } else {
+                          next[pf.id] = "";
+                        }
+                        return next;
+                      });
+                    }}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+                      isToggled
+                        ? "bg-accent-bg text-accent-text ring-1 ring-accent-text"
+                        : "bg-elevated text-secondary ring-1 ring-border hover:bg-elevated/80"
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => {
-                        setBulkSelectedPortfolioIds((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(pf.id)) next.delete(pf.id);
-                          else next.add(pf.id);
-                          return next;
-                        });
-                      }}
-                      className="h-4 w-4 rounded border-border text-accent-text focus:ring-accent-text"
-                    />
                     <span
-                      className="inline-block h-3 w-3 rounded-full shrink-0"
+                      className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: pf.colour }}
                     />
-                    <span className="font-medium text-primary">{pf.name}</span>
-                  </label>
+                    {pf.name}
+                  </button>
                 );
               })}
             </div>
+
+            {/* Expanded shares input for toggled portfolios */}
+            {portfolios.map((pf) => {
+              const isToggled = bulkPortfolioShares[pf.id] !== undefined;
+              if (!isToggled) return null;
+              return (
+                <div key={`shares-${pf.id}`} className="mb-3">
+                  <label className="block text-xs font-medium text-secondary mb-1">
+                    shares for {pf.name}:
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={bulkPortfolioShares[pf.id]}
+                    onChange={(e) => {
+                      setBulkPortfolioShares((prev) => ({
+                        ...prev,
+                        [pf.id]: e.target.value,
+                      }));
+                    }}
+                    placeholder="e.g. 1000"
+                    className="block w-full rounded-md border border-border bg-elevated px-3 py-2 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
+                  />
+                </div>
+              );
+            })}
 
             {/* Actions */}
             <div className="mt-6 flex justify-end gap-3">
@@ -1409,8 +1425,7 @@ export default function DashboardPage() {
                   setShowBulkAddStock(false);
                   setBulkSearchTerm("");
                   setBulkSelectedStock(null);
-                  setBulkShares("");
-                  setBulkSelectedPortfolioIds(new Set());
+                  setBulkPortfolioShares({});
                 }}
                 className="rounded-md bg-elevated px-4 py-2 text-sm font-medium text-primary shadow-sm ring-1 ring-inset ring-border hover:brightness-110 transition-colors"
               >
@@ -1418,7 +1433,12 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={handleBulkAddHolding}
-                disabled={!bulkSelectedStock || !bulkShares || bulkSelectedPortfolioIds.size === 0}
+                disabled={
+                  !bulkSelectedStock ||
+                  Object.entries(bulkPortfolioShares).filter(
+                    ([, v]) => v.trim() !== "" && parseInt(v, 10) > 0
+                  ).length === 0
+                }
                 className="rounded-md bg-accent-bg px-4 py-2 text-sm font-medium text-accent-text shadow-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Add to Portfolios
