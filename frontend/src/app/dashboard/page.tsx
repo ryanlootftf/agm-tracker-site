@@ -574,10 +574,10 @@ export default function DashboardPage() {
                       onClick={() => {
                         setSelectedEvent(ev);
                       }}
-                      className="flex items-start gap-3 w-full text-left rounded-lg p-3 hover:bg-elevated transition-colors ring-1 ring-inset ring-border/50"
+                      className="flex items-center gap-3 w-full text-left rounded-lg p-3 hover:bg-elevated transition-colors ring-1 ring-inset ring-border/50"
                     >
                       {/* Colour dots */}
-                      <div className="flex -space-x-1 shrink-0 mt-0.5">
+                      <div className="flex -space-x-1 shrink-0">
                         {(holderMap[ev.stock_code] ?? []).map((h, i) => (
                           <span
                             key={i}
@@ -660,15 +660,15 @@ export default function DashboardPage() {
                           {day}
                         </div>
                         {dayEvents.map((ev) => (
-                          <button
-                            key={ev.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedEvent(ev);
-                            }}
-                            className="flex items-start gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-elevated transition-colors mb-0.5"
-                          >
-                            <div className="flex -space-x-0.5 shrink-0 mt-0.5">
+                    <button
+                      key={ev.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(ev);
+                      }}
+                      className="flex items-center gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-elevated transition-colors mb-0.5"
+                    >
+                      <div className="flex -space-x-0.5 shrink-0">
                               {(holderMap[ev.stock_code] ?? []).map((h, i) => (
                                 <span
                                   key={i}
