@@ -154,6 +154,9 @@ export default function DashboardPage() {
                 return { ...holding, stocks: s ?? undefined };
               })
             );
+            enriched.sort((a, b) =>
+              (a.stocks?.symbol ?? a.stock_code).localeCompare(b.stocks?.symbol ?? b.stock_code)
+            );
             hMap[port.id] = enriched;
           } else {
             hMap[port.id] = [];
@@ -447,36 +450,37 @@ export default function DashboardPage() {
               )}
 
               {holdingsMap[pf.id]?.length > 0 && (
-                <div className={`ml-6 space-y-0.5 ${collapsedPfs.has(pf.id) ? "hidden" : ""}`}>
+                <div className={`ml-6 ${collapsedPfs.has(pf.id) ? "hidden" : ""}`}>
                   {holdingsMap[pf.id].map((h) => (
                     <div
                       key={h.id}
-                      className="flex w-full items-center gap-2 text-left rounded px-1 py-0.5 transition-colors"
+                      className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-3 rounded px-1 py-0.5 hover:bg-elevated transition-colors"
                     >
-                      <button
+                      {/* Ticker */}
+                      <span className="text-base font-bold text-primary">
+                        {h.stocks?.symbol ?? h.stock_code}
+                      </span>
+                      {/* Company name */}
+                      <span className="text-secondary text-sm font-medium truncate">
+                        {h.stocks?.company_name ?? ""}
+                      </span>
+                      {/* Shares */}
+                      <span className="text-sm font-medium text-secondary/50 justify-self-end cursor-pointer"
                         onClick={() => {
                           const event = agmEvents.find((ev) => ev.stock_code === h.stock_code);
                           if (event) setSelectedEvent(event);
                         }}
-                        className="flex items-center gap-2 flex-1 min-w-0 hover:bg-elevated rounded px-1 py-0.5 transition-colors"
+                        title="View AGM event"
                       >
-                        <span className="text-base font-bold text-primary">
-                          {h.stocks?.symbol ?? h.stock_code}
-                        </span>
-                        <span className="text-secondary text-sm font-medium truncate">
-                          {h.stocks?.company_name ?? ""}
-                        </span>
-                        <span className="ml-auto text-sm font-medium text-secondary/50 shrink-0">
-                          {h.shares != null ? `${h.shares.toLocaleString()} shares` : "0 shares"}
-                        </span>
-                      </button>
+                        {h.shares != null ? `${h.shares.toLocaleString()} shares` : "0 shares"}
+                      </span>
                       {/* Edit button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleOpenHoldingModal(h);
                         }}
-                        className="text-secondary/50 hover:text-accent-text transition-colors shrink-0"
+                        className="text-secondary/50 hover:text-accent-text transition-colors"
                         title="Edit holding"
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
