@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import FeedbackButton from "@/components/FeedbackButton";
@@ -98,6 +98,83 @@ export default function DashboardPage() {
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedEvent, setSelectedEvent] = useState<AGMEvent | null>(null);
   const [selectedDateList, setSelectedDateList] = useState<string | null>(null);
+
+  // Mobile calendar scroll state
+  const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const mobileScrollRef = useRef<HTMLDivElement | null>(null);
+  const [visibleMonth, setVisibleMonth] = useState<{ month: number; year: number } | null>(null);
+  const isMobileScrolling = useRef(false);
+
+  // Group AGM events by month for mobile infinite scroll
+  const monthGroups = useMemo(() => {
+    const groups: { key: string; month: number; year: number; eventsByDate: Record<string, AGMEvent[]> }[] = [];
+    if (agmEvents.length === 0) return groups;
+
+    const eventsByDate: Record<string, AGMEvent[]> = {};
+    for (const ev of agmEvents) {
+      const d = ev.meeting_date;
+      if (!eventsByDate[d]) eventsByDate[d] = [];
+      eventsByDate[d].push(ev);
+    }
+    for (const d of Object.keys(eventsByDate)) {
+      eventsByDate[d].sort((a, b) =>
+        (a.meeting_time ?? "").localeCompare(b.meeting_time ?? "")
+      );
+    }
+
+    const sortedDates = Object.keys(eventsByDate).sort();
+    for (const dateStr of sortedDates) {
+      const [y, m] = dateStr.split("-").map(Number);
+      const key = `${y}-${String(m).padStart(2, "0")}`;
+      let group = groups.find((g) => g.key === key);
+      if (!group) {
+        group = { key, month: m - 1, year: y, eventsByDate: {} };
+        groups.push(group);
+      }
+      group.eventsByDate[dateStr] = eventsByDate[dateStr];
+    }
+    return groups;
+  }, [agmEvents]);
+
+  // IntersectionObserver: update header month based on which month section is visible
+  useEffect(() => {
+    if (monthGroups.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isMobileScrolling.current) return;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const key = entry.target.getAttribute("data-month-key");
+            if (key) {
+              const [y, m] = key.split("-").map(Number);
+              setVisibleMonth({ month: m - 1, year: y });
+            }
+          }
+        }
+      },
+      { root: mobileScrollRef.current, threshold: 0.3 }
+    );
+
+    for (const group of monthGroups) {
+      const el = monthRefs.current[group.key];
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [monthGroups]);
+
+  // Scroll to month on mobile
+  const scrollToMonthMobile = useCallback((month: number, year: number) => {
+    const key = `${year}-${String(month + 1).padStart(2, "0")}`;
+    const el = monthRefs.current[key];
+    if (el) {
+      isMobileScrolling.current = true;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      setVisibleMonth({ month, year });
+      setTimeout(() => {
+        isMobileScrolling.current = false;
+      }, 600);
+    }
+  }, []);
 
   // Portfolio collapse state (starts collapsed)
   const [collapsedPfs, setCollapsedPfs] = useState<Set<string>>(new Set());
@@ -624,12 +701,19 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
+                    let newMonth: number;
+                    let newYear: number;
                     if (calendarMonth === 0) {
+                      newMonth = 11;
+                      newYear = calendarYear - 1;
                       setCalendarMonth(11);
                       setCalendarYear(calendarYear - 1);
                     } else {
+                      newMonth = calendarMonth - 1;
+                      newYear = calendarYear;
                       setCalendarMonth(calendarMonth - 1);
                     }
+                    scrollToMonthMobile(newMonth, newYear);
                   }}
                   className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
                 >
@@ -638,16 +722,26 @@ export default function DashboardPage() {
                   </svg>
                 </button>
                 <span className="text-sm font-medium text-primary min-w-[120px] text-center">
-                  {new Date(calendarYear, calendarMonth).toLocaleString("default", { month: "long", year: "numeric" })}
+                  {new Date(
+                    visibleMonth?.year ?? calendarYear,
+                    visibleMonth?.month ?? calendarMonth
+                  ).toLocaleString("default", { month: "long", year: "numeric" })}
                 </span>
                 <button
                   onClick={() => {
+                    let newMonth: number;
+                    let newYear: number;
                     if (calendarMonth === 11) {
+                      newMonth = 0;
+                      newYear = calendarYear + 1;
                       setCalendarMonth(0);
                       setCalendarYear(calendarYear + 1);
                     } else {
+                      newMonth = calendarMonth + 1;
+                      newYear = calendarYear;
                       setCalendarMonth(calendarMonth + 1);
                     }
+                    scrollToMonthMobile(newMonth, newYear);
                   }}
                   className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
                 >
@@ -657,8 +751,10 @@ export default function DashboardPage() {
                 </button>
                 <button
                   onClick={() => {
-                    setCalendarMonth(new Date().getMonth());
-                    setCalendarYear(new Date().getFullYear());
+                    const now = new Date();
+                    setCalendarMonth(now.getMonth());
+                    setCalendarYear(now.getFullYear());
+                    scrollToMonthMobile(now.getMonth(), now.getFullYear());
                   }}
                   className="rounded-md px-2 py-1 text-xs font-medium text-accent-text hover:brightness-110 transition-colors"
                 >
@@ -670,7 +766,7 @@ export default function DashboardPage() {
 
           {!selectedDateList && (
             /* Day-of-week headers */
-            <div className="grid grid-cols-7 text-center text-xs font-medium text-secondary mb-2">
+            <div className="hidden md:grid grid-cols-7 text-center text-xs font-medium text-secondary mb-2">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
                 <div key={d} className="py-1">{d}</div>
               ))}
@@ -751,7 +847,7 @@ export default function DashboardPage() {
           ) : (
             <>
               {/* Calendar grid */}
-              <div className="grid grid-cols-7 text-sm">
+              <div className="hidden md:grid grid-cols-7 text-sm">
                 {(() => {
                   const firstDay = new Date(calendarYear, calendarMonth, 1);
                   let startOffset = firstDay.getDay() - 1;
@@ -849,6 +945,86 @@ export default function DashboardPage() {
                   No upcoming AGM events for your holdings.
                 </p>
               )}
+
+              {/* ---------- Mobile: Infinite scroll month list ---------- */}
+              <div
+                ref={mobileScrollRef}
+                className="md:hidden mt-2 max-h-[70vh] overflow-y-auto overscroll-contain"
+              >
+                {monthGroups.length === 0 ? (
+                  <p className="mt-4 text-center text-sm font-medium text-secondary">
+                    No upcoming AGM events for your holdings.
+                  </p>
+                ) : (
+                  monthGroups.map((group) => {
+                    const dateKeys = Object.keys(group.eventsByDate).sort();
+                    return (
+                      <div
+                        key={group.key}
+                        ref={(el) => {
+                          monthRefs.current[group.key] = el;
+                        }}
+                        data-month-key={group.key}
+                        className="mb-4"
+                      >
+                        <h3 className="text-sm font-bold text-secondary uppercase tracking-wide mb-2 pb-1 border-b border-border">
+                          {new Date(group.year, group.month).toLocaleString("default", {
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </h3>
+                        {dateKeys.map((dateStr) => {
+                          const dayEvents = group.eventsByDate[dateStr];
+                          const date = new Date(dateStr + "T00:00:00");
+                          return (
+                            <div key={dateStr} className="mb-3">
+                              <div className="text-xs font-semibold text-primary mb-1">
+                                {date.toLocaleDateString("en-MY", {
+                                  weekday: "long",
+                                  day: "numeric",
+                                  month: "long",
+                                })}
+                              </div>
+                              {dayEvents.map((ev) => (
+                                <button
+                                  key={ev.id}
+                                  onClick={() => setSelectedEvent(ev)}
+                                  className="flex items-center gap-3 w-full text-left rounded-lg p-2 hover:bg-elevated transition-colors mb-1"
+                                >
+                                  {/* Colour dots */}
+                                  <div className="flex -space-x-1 shrink-0">
+                                    {(holderMap[ev.stock_code] ?? []).map((h, i) => (
+                                      <span
+                                        key={i}
+                                        className="inline-block h-3 w-3 rounded-full ring-1 ring-card"
+                                        style={{ backgroundColor: h.colour }}
+                                        title={h.name}
+                                      />
+                                    ))}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-bold text-primary">
+                                      {ev.meeting_time && <span>{ev.meeting_time} </span>}
+                                      {ev.stock_ticker}
+                                    </div>
+                                    <div className="text-xs text-secondary truncate">
+                                      {ev.meeting_type}
+                                    </div>
+                                    <div className="text-xs text-secondary/60 truncate">
+                                      {ev.venue_type}
+                                      {ev.meeting_location ? ` — ${ev.meeting_location}` : ""}
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </>
           )}
         </div>
