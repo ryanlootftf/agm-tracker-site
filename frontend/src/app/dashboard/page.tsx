@@ -68,6 +68,9 @@ export default function DashboardPage() {
   const [searching, setSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Stock detail modal state
+  const [selectedStockForDetail, setSelectedStockForDetail] = useState<Holding | null>(null);
+
   // Manage holding modal state
   const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
   const [modalShares, setModalShares] = useState("");
@@ -455,7 +458,7 @@ export default function DashboardPage() {
                     <div
                       key={h.id}
                       className="contents cursor-pointer"
-                      onClick={() => handleOpenHoldingModal(h)}
+                      onClick={() => setSelectedStockForDetail(h)}
                     >
                       {/* Ticker */}
                       <span className="text-base font-bold text-primary px-1 py-0.5 rounded hover:bg-elevated transition-colors">
@@ -931,6 +934,73 @@ export default function DashboardPage() {
                 className="rounded-md bg-accent-bg px-4 py-2 text-sm font-medium text-accent-text shadow-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Stock Detail Modal ---------- */}
+      {selectedStockForDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setSelectedStockForDetail(null)}>
+          <div
+            className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl ring-1 ring-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-lg font-semibold text-primary">
+                {selectedStockForDetail.stocks?.symbol ?? selectedStockForDetail.stock_code}
+              </h3>
+              <button
+                onClick={() => setSelectedStockForDetail(null)}
+                className="text-secondary hover:text-primary transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="font-medium text-secondary">Company:</span>{" "}
+                <span className="text-primary">{selectedStockForDetail.stocks?.company_name ?? "—"}</span>
+              </div>
+              <div>
+                <span className="font-medium text-secondary">Stock Code:</span>{" "}
+                <span className="text-primary">{selectedStockForDetail.stock_code}</span>
+              </div>
+              <div>
+                <span className="font-medium text-secondary">Shares:</span>{" "}
+                <span className="text-primary">{selectedStockForDetail.shares != null ? selectedStockForDetail.shares.toLocaleString() : "0"}</span>
+              </div>
+            </div>
+
+            {/* Portfolios holding this stock */}
+            {(holderMap[selectedStockForDetail.stock_code] ?? []).length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-xs font-medium text-secondary uppercase tracking-wide mb-2">Held by portfolios</p>
+                <div className="flex flex-wrap gap-2">
+                  {(holderMap[selectedStockForDetail.stock_code] ?? []).map((h, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white"
+                      style={{ backgroundColor: h.colour }}
+                    >
+                      {h.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Close button */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setSelectedStockForDetail(null)}
+                className="rounded-md bg-elevated px-4 py-2 text-sm font-medium text-primary shadow-sm ring-1 ring-inset ring-border hover:brightness-110 transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>
