@@ -565,6 +565,9 @@ export default function DashboardPage() {
               <div className="space-y-2">
                 {agmEvents
                   .filter((ev) => ev.meeting_date === selectedDateList)
+                  .sort((a, b) =>
+                    (a.meeting_time ?? "").localeCompare(b.meeting_time ?? "")
+                  )
                   .map((ev) => (
                     <button
                       key={ev.id}
@@ -616,6 +619,12 @@ export default function DashboardPage() {
                     if (!eventsByDate[d]) eventsByDate[d] = [];
                     eventsByDate[d].push(ev);
                   }
+                  // Sort each day's events by meeting time
+                  for (const d of Object.keys(eventsByDate)) {
+                    eventsByDate[d].sort((a, b) =>
+                      (a.meeting_time ?? "").localeCompare(b.meeting_time ?? "")
+                    );
+                  }
 
                   const cells: React.ReactNode[] = [];
 
@@ -656,9 +665,9 @@ export default function DashboardPage() {
                               e.stopPropagation();
                               setSelectedEvent(ev);
                             }}
-                            className="flex items-center gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-elevated transition-colors mb-0.5"
+                            className="flex items-start gap-0.5 w-full text-left rounded px-0.5 py-0.5 hover:bg-elevated transition-colors mb-0.5"
                           >
-                            <div className="flex -space-x-0.5 shrink-0">
+                            <div className="flex -space-x-0.5 shrink-0 mt-0.5">
                               {(holderMap[ev.stock_code] ?? []).map((h, i) => (
                                 <span
                                   key={i}
@@ -668,9 +677,16 @@ export default function DashboardPage() {
                                 />
                               ))}
                             </div>
-                            <span className="text-sm font-bold text-primary truncate">
-                              {ev.stock_ticker}
-                            </span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-bold text-primary truncate">
+                                {ev.stock_ticker}
+                              </span>
+                              {ev.meeting_time && (
+                                <span className="text-[10px] text-secondary/70 truncate">
+                                  {ev.meeting_time}
+                                </span>
+                              )}
+                            </div>
                           </button>
                         ))}
                       </div>
