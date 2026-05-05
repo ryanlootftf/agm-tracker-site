@@ -461,6 +461,10 @@ export default function DashboardPage() {
                 </div>
               )}
 
+              {!collapsedPfs.has(pf.id) && (holdingsMap[pf.id]?.length ?? 0) > 0 && (
+                <hr className="border-border ml-6 mb-2" />
+              )}
+
               {/* Holdings */}
               {(!collapsedPfs.has(pf.id) && (!holdingsMap[pf.id] || holdingsMap[pf.id].length === 0)) && (
                 <p className="text-base font-medium text-secondary ml-6">
