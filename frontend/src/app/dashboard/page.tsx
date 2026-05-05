@@ -540,63 +540,67 @@ export default function DashboardPage() {
 
         {/* ---------- AGM Calendar ---------- */}
         <div className="rounded-lg bg-card p-6 shadow-sm ring-1 ring-border">
-          {/* Calendar header */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-primary uppercase tracking-wide">
-              AGM Calendar
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (calendarMonth === 0) {
-                    setCalendarMonth(11);
-                    setCalendarYear(calendarYear - 1);
-                  } else {
-                    setCalendarMonth(calendarMonth - 1);
-                  }
-                }}
-                className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                </svg>
-              </button>
-              <span className="text-sm font-medium text-primary min-w-[120px] text-center">
-                {new Date(calendarYear, calendarMonth).toLocaleString("default", { month: "long", year: "numeric" })}
-              </span>
-              <button
-                onClick={() => {
-                  if (calendarMonth === 11) {
-                    setCalendarMonth(0);
-                    setCalendarYear(calendarYear + 1);
-                  } else {
-                    setCalendarMonth(calendarMonth + 1);
-                  }
-                }}
-                className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
-              </button>
-              <button
-                onClick={() => {
-                  setCalendarMonth(new Date().getMonth());
-                  setCalendarYear(new Date().getFullYear());
-                }}
-                className="rounded-md px-2 py-1 text-xs font-medium text-accent-text hover:brightness-110 transition-colors"
-              >
-                Today
-              </button>
+          {!selectedDateList && (
+            /* Calendar header */
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-primary uppercase tracking-wide">
+                AGM Calendar
+              </h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (calendarMonth === 0) {
+                      setCalendarMonth(11);
+                      setCalendarYear(calendarYear - 1);
+                    } else {
+                      setCalendarMonth(calendarMonth - 1);
+                    }
+                  }}
+                  className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+                <span className="text-sm font-medium text-primary min-w-[120px] text-center">
+                  {new Date(calendarYear, calendarMonth).toLocaleString("default", { month: "long", year: "numeric" })}
+                </span>
+                <button
+                  onClick={() => {
+                    if (calendarMonth === 11) {
+                      setCalendarMonth(0);
+                      setCalendarYear(calendarYear + 1);
+                    } else {
+                      setCalendarMonth(calendarMonth + 1);
+                    }
+                  }}
+                  className="rounded-md p-1 text-secondary hover:bg-elevated hover:text-primary transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    setCalendarMonth(new Date().getMonth());
+                    setCalendarYear(new Date().getFullYear());
+                  }}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-accent-text hover:brightness-110 transition-colors"
+                >
+                  Today
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Day-of-week headers */}
-          <div className="grid grid-cols-7 text-center text-xs font-medium text-secondary mb-2">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-              <div key={d} className="py-1">{d}</div>
-            ))}
-          </div>
+          {!selectedDateList && (
+            /* Day-of-week headers */
+            <div className="grid grid-cols-7 text-center text-xs font-medium text-secondary mb-2">
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+                <div key={d} className="py-1">{d}</div>
+              ))}
+            </div>
+          )}
 
           {selectedDateList ? (
             /* ---------- Inline Day List View ---------- */
