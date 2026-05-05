@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
     const datetime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const subject = `Feedback ${datetime}`;
+    const datetimeStripped = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}${pad(now.getMinutes())}`;
+    const subject = `AGM Meeting Tracker Feedback ${datetimeStripped}`;
 
     // Build email body
     const emailBody = [
