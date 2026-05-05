@@ -93,6 +93,9 @@ export default function DashboardPage() {
   const [collapsedPfs, setCollapsedPfs] = useState<Set<string>>(new Set());
   const [initialCollapseDone, setInitialCollapseDone] = useState(false);
 
+  // Portfolio filter search state
+  const [portfolioSearch, setPortfolioSearch] = useState<Record<string, string>>({});
+
   // Add portfolio modal state
   const [showAddPortfolio, setShowAddPortfolio] = useState(false);
   const [newPortfolioName, setNewPortfolioName] = useState("");
@@ -445,6 +448,19 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              {/* Portfolio search input */}
+              {!collapsedPfs.has(pf.id) && (holdingsMap[pf.id]?.length ?? 0) > 0 && (
+                <div className="ml-6 mb-2">
+                  <input
+                    type="text"
+                    value={portfolioSearch[pf.id] ?? ""}
+                    onChange={(e) => setPortfolioSearch((prev) => ({ ...prev, [pf.id]: e.target.value }))}
+                    placeholder="Search by symbol, code or company name…"
+                    className="block w-full max-w-xs rounded-md border border-border bg-elevated px-3 py-1.5 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
+                  />
+                </div>
+              )}
+
               {/* Holdings */}
               {(!collapsedPfs.has(pf.id) && (!holdingsMap[pf.id] || holdingsMap[pf.id].length === 0)) && (
                 <p className="text-base font-medium text-secondary ml-6">
@@ -452,48 +468,67 @@ export default function DashboardPage() {
                 </p>
               )}
 
-              {holdingsMap[pf.id]?.length > 0 && (
-                <div className={`ml-6 grid grid-cols-[auto_1fr_auto_auto] gap-x-3 ${collapsedPfs.has(pf.id) ? "hidden" : ""}`}>
-                  {holdingsMap[pf.id].map((h) => (
-                    <div
-                      key={h.id}
-                      className="contents cursor-pointer"
-                      onClick={() => {
-                        const event = agmEvents.find((ev) => ev.stock_code === h.stock_code);
-                        if (event) setSelectedEvent(event);
-                        else setSelectedStockForDetail(h);
-                      }}
-                    >
-                      {/* Ticker */}
-                      <span className="text-base font-bold text-primary px-1 py-0.5 rounded hover:bg-elevated transition-colors">
-                        {h.stocks?.symbol ?? h.stock_code}
-                      </span>
-                      {/* Company name */}
-                      <span className="text-secondary text-sm font-medium truncate self-center">
-                        {h.stocks?.company_name ?? ""}
-                      </span>
-                      {/* Shares */}
-                      <span className="text-sm font-medium text-secondary/50 justify-self-end self-center px-1 py-0.5 rounded hover:bg-elevated transition-colors">
-                        {h.shares != null ? `${h.shares.toLocaleString()} shares` : "0 shares"}
-                      </span>
-                      {/* Edit button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenHoldingModal(h);
+              {(() => {
+                const raw = holdingsMap[pf.id] ?? [];
+                const query = (portfolioSearch[pf.id] ?? "").toLowerCase();
+                const filtered = query
+                  ? raw.filter((h) => {
+                      const symbol = (h.stocks?.symbol ?? "").toLowerCase();
+                      const code = h.stock_code.toLowerCase();
+                      const company = (h.stocks?.company_name ?? "").toLowerCase();
+                      return symbol.includes(query) || code.includes(query) || company.includes(query);
+                    })
+                  : raw;
+                if (filtered.length === 0 && query) {
+                  return (
+                    <p className="text-base font-medium text-secondary ml-6">
+                      No holdings match "{query}".
+                    </p>
+                  );
+                }
+                if (filtered.length === 0) return null;
+                return (
+                  <div className={`ml-6 grid grid-cols-[auto_1fr_auto_auto] gap-x-3 ${collapsedPfs.has(pf.id) ? "hidden" : ""}`}>
+                    {filtered.map((h) => (
+                      <div
+                        key={h.id}
+                        className="contents cursor-pointer"
+                        onClick={() => {
+                          const event = agmEvents.find((ev) => ev.stock_code === h.stock_code);
+                          if (event) setSelectedEvent(event);
+                          else setSelectedStockForDetail(h);
                         }}
-                        className="text-secondary/50 hover:text-accent-text transition-colors self-center"
-                        title="Edit holding"
                       >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
+                        {/* Ticker */}
+                        <span className="text-base font-bold text-primary px-1 py-0.5 rounded hover:bg-elevated transition-colors">
+                          {h.stocks?.symbol ?? h.stock_code}
+                        </span>
+                        {/* Company name */}
+                        <span className="text-secondary text-sm font-medium truncate self-center">
+                          {h.stocks?.company_name ?? ""}
+                        </span>
+                        {/* Shares */}
+                        <span className="text-sm font-medium text-secondary/50 justify-self-end self-center px-1 py-0.5 rounded hover:bg-elevated transition-colors">
+                          {h.shares != null ? `${h.shares.toLocaleString()} shares` : "0 shares"}
+                        </span>
+                        {/* Edit button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenHoldingModal(h);
+                          }}
+                          className="text-secondary/50 hover:text-accent-text transition-colors self-center"
+                          title="Edit holding"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </div>
