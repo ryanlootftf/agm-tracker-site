@@ -5,8 +5,8 @@
 @layer base {
   :root {
     --color-page: #F2F2F2;
-    --color-card: #ffffff;
-    --color-elevated: #f3f4f6;
+    --color-card: #F3F3F3;
+    --color-elevated: #f4f4f4;
     --color-border: #e5e7eb;
     --color-primary: #111827;
     --color-secondary: #4b5563;
