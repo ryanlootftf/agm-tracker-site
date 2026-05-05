@@ -456,7 +456,7 @@ export default function DashboardPage() {
                     value={portfolioSearch[pf.id] ?? ""}
                     onChange={(e) => setPortfolioSearch((prev) => ({ ...prev, [pf.id]: e.target.value }))}
                     placeholder="Search by symbol, code or company name…"
-                    className="block w-full max-w-xs rounded-md border border-border bg-elevated px-3 py-1.5 text-sm text-primary shadow-sm placeholder-secondary/50 focus:border-accent-text focus:outline-none focus:ring-1 focus:ring-accent-text"
+                    className="block w-full bg-transparent px-0 py-1 text-sm text-primary placeholder-secondary/50 focus:outline-none"
                   />
                 </div>
               )}
