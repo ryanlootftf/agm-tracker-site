@@ -450,22 +450,22 @@ export default function DashboardPage() {
               )}
 
               {holdingsMap[pf.id]?.length > 0 && (
-                <div className={`ml-6 ${collapsedPfs.has(pf.id) ? "hidden" : ""}`}>
+                <div className={`ml-6 grid grid-cols-[auto_1fr_auto_auto] gap-x-3 ${collapsedPfs.has(pf.id) ? "hidden" : ""}`}>
                   {holdingsMap[pf.id].map((h) => (
                     <div
                       key={h.id}
-                      className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-3 rounded px-1 py-0.5 hover:bg-elevated transition-colors"
+                      className="contents"
                     >
                       {/* Ticker */}
-                      <span className="text-base font-bold text-primary">
+                      <span className="text-base font-bold text-primary px-1 py-0.5 rounded hover:bg-elevated transition-colors">
                         {h.stocks?.symbol ?? h.stock_code}
                       </span>
                       {/* Company name */}
-                      <span className="text-secondary text-sm font-medium truncate">
+                      <span className="text-secondary text-sm font-medium truncate self-center">
                         {h.stocks?.company_name ?? ""}
                       </span>
                       {/* Shares */}
-                      <span className="text-sm font-medium text-secondary/50 justify-self-end cursor-pointer"
+                      <span className="text-sm font-medium text-secondary/50 justify-self-end self-center cursor-pointer px-1 py-0.5 rounded hover:bg-elevated transition-colors"
                         onClick={() => {
                           const event = agmEvents.find((ev) => ev.stock_code === h.stock_code);
                           if (event) setSelectedEvent(event);
@@ -480,7 +480,7 @@ export default function DashboardPage() {
                           e.stopPropagation();
                           handleOpenHoldingModal(h);
                         }}
-                        className="text-secondary/50 hover:text-accent-text transition-colors"
+                        className="text-secondary/50 hover:text-accent-text transition-colors self-center"
                         title="Edit holding"
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
