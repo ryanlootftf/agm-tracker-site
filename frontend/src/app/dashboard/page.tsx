@@ -454,7 +454,8 @@ export default function DashboardPage() {
                   {holdingsMap[pf.id].map((h) => (
                     <div
                       key={h.id}
-                      className="contents"
+                      className="contents cursor-pointer"
+                      onClick={() => handleOpenHoldingModal(h)}
                     >
                       {/* Ticker */}
                       <span className="text-base font-bold text-primary px-1 py-0.5 rounded hover:bg-elevated transition-colors">
@@ -465,13 +466,7 @@ export default function DashboardPage() {
                         {h.stocks?.company_name ?? ""}
                       </span>
                       {/* Shares */}
-                      <span className="text-sm font-medium text-secondary/50 justify-self-end self-center cursor-pointer px-1 py-0.5 rounded hover:bg-elevated transition-colors"
-                        onClick={() => {
-                          const event = agmEvents.find((ev) => ev.stock_code === h.stock_code);
-                          if (event) setSelectedEvent(event);
-                        }}
-                        title="View AGM event"
-                      >
+                      <span className="text-sm font-medium text-secondary/50 justify-self-end self-center px-1 py-0.5 rounded hover:bg-elevated transition-colors">
                         {h.shares != null ? `${h.shares.toLocaleString()} shares` : "0 shares"}
                       </span>
                       {/* Edit button */}
