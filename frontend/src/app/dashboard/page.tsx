@@ -1399,7 +1399,7 @@ export default function DashboardPage() {
               return (
                 <div key={`shares-${pf.id}`} className="mb-3">
                   <label className="block text-xs font-medium text-secondary mb-1">
-                    shares for {pf.name}:
+                    Shares for {pf.name}:
                   </label>
                   <input
                     type="number"
