@@ -207,8 +207,8 @@ export default function Home() {
               </Link>
               <button
                 onClick={scrollToHowItWorks}
-                className="rounded-lg px-7 py-3.5 text-sm font-bold text-white/80 transition-colors hover:bg-white/5"
-                style={{ border: "0.5px solid rgba(255,255,255,0.2)" }}
+                className="rounded-lg px-7 py-3.5 text-sm font-bold text-primary/70 transition-colors hover:bg-black/5 dark:text-white/80 dark:hover:bg-white/5"
+                style={{ border: "0.5px solid", borderColor: "rgba(255,255,255,0.2)" }}
               >
                 See how it works
               </button>
