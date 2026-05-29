@@ -12,6 +12,7 @@
     --color-secondary: #6B6158;
     --color-accent-bg: #EDE8FF;
     --color-accent-text: #5040CC;
+    --color-accent-primary: #7c6fff;
     --color-today-bg: rgba(170,215,155,0.22);
     --color-today-text: #3A7228;
   }
@@ -25,6 +26,7 @@
     --color-secondary: #d1d5db;
     --color-accent-bg: #1e3a5f;
     --color-accent-text: #93c5fd;
+    --color-accent-primary: #7c6fff;
     --color-today-bg: #14532d;
     --color-today-text: #86efac;
   }

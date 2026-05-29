@@ -19,6 +19,7 @@ export default {
         accent: {
           bg: "var(--color-accent-bg)",
           text: "var(--color-accent-text)",
+          primary: "var(--color-accent-primary)",
           DEFAULT: "var(--color-accent-text)",
         },
         today: {
