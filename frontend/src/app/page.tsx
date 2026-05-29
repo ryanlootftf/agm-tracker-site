@@ -46,12 +46,6 @@ export default function Home() {
               >
                 Get Started Free
               </Link>
-              <Link
-                href="/dashboard"
-                className="rounded-lg bg-card px-7 py-3.5 text-sm font-bold text-primary shadow-sm ring-1 ring-inset ring-border hover:bg-elevated transition-all active:scale-[0.97]"
-              >
-                View Dashboard
-              </Link>
             </div>
           </div>
 
