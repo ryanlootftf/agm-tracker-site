@@ -106,14 +106,9 @@ export default function Home() {
 
             {selectedMeeting.hybrid && (
               <div className="mt-4 pt-4 border-t border-border">
-                <a
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full rounded-md bg-accent-primary px-4 py-2 text-center text-sm font-medium text-white shadow-sm hover:brightness-110 transition-colors"
-                >
+                <span className="block w-full rounded-md bg-accent-primary/60 px-4 py-2 text-center text-sm font-medium text-white/80 shadow-sm cursor-default select-none">
                   Open Meeting Link
-                </a>
+                </span>
               </div>
             )}
           </div>
