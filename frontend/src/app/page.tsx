@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import landingImage from "@/images/landing_1.png";
+import landingImage2 from "@/images/landing_2.png";
 
 export default function Home() {
   return (
@@ -113,6 +114,21 @@ export default function Home() {
                 without searching for the details.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- Feature screenshot ---------- */}
+      <section className="px-6 py-16 sm:px-10">
+        <div className="mx-auto max-w-5xl">
+          <div className="relative overflow-hidden rounded-xl shadow-lg ring-1 ring-border">
+            <Image
+              src={landingImage2}
+              alt="AGM Meeting Tracker features overview"
+              width={1024}
+              height={600}
+              className="h-auto w-full"
+            />
           </div>
         </div>
       </section>
