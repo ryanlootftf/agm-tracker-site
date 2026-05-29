@@ -336,7 +336,7 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
           <Image
-            src={laptopPhoto}
+            src={conferencePhoto}
             alt=""
             fill
             className="object-cover object-center scale-110"
@@ -357,51 +357,71 @@ export default function Home() {
       </section>
 
       {/* ---------- How It Works ---------- */}
-      <section id="how-it-works" className="px-6 py-20 sm:px-10">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl">
-            How it works
-          </h2>
-          <p className="mt-3 text-center text-secondary" style={{ lineHeight: 1.65 }}>
-            Get started in three simple steps.
-          </p>
+      <section id="how-it-works" className="relative overflow-hidden px-6 py-20 sm:px-10">
+        {/* Left: laptop/online meeting photo */}
+        <div className="absolute inset-y-0 left-0 hidden w-1/2 lg:block">
+          <Image
+            src={laptopPhoto}
+            alt=""
+            fill
+            className="object-cover object-center"
+          />
+          {/* Dark scrim overlay */}
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.45)" }} />
+          {/* Right-side gradient fade — dissolves into dark background */}
+          <div
+            className="absolute inset-y-0 right-0 w-3/5"
+            style={{ background: "linear-gradient(to left, #0f1117 0%, transparent 40%)" }}
+          />
+        </div>
 
-          <div className="relative mt-14 grid gap-10 sm:grid-cols-3">
-            {/* Horizontal connecting line behind steps */}
-            <div aria-hidden className="pointer-events-none absolute left-[calc(16.67%+2rem)] right-[calc(16.67%+2rem)] top-6 hidden h-px sm:block" style={{ background: "linear-gradient(to right, #7c6fff44, #7c6fff88, #7c6fff44)" }} />
+        <div className="relative z-10 mx-auto max-w-6xl">
+          {/* Heading row */}
+          <div className="lg:w-1/2 lg:ml-auto">
+            <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl lg:text-left">
+              How it works
+            </h2>
+            <p className="mt-3 text-center text-secondary lg:text-left" style={{ lineHeight: 1.65 }}>
+              Get started in three simple steps.
+            </p>
+          </div>
 
-            {/* Step 1 */}
-            <div className="relative flex flex-col items-center text-center">
-              <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary text-lg font-bold text-white">
-                1
-              </span>
-              <h3 className="mt-4 text-lg font-bold text-primary">Sign In</h3>
-              <p className="mt-2 text-sm text-secondary" style={{ lineHeight: 1.65 }}>
-                Sign in with your Google account. No registration forms needed.
-              </p>
-            </div>
+          {/* Steps row */}
+          <div className="relative mt-14 lg:w-1/2 lg:ml-auto">
+            <div className="grid gap-10 sm:grid-cols-3">
+              {/* Step 1 */}
+              <div className="relative flex flex-col items-center text-center lg:items-start lg:text-left">
+                <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary text-lg font-bold text-white">
+                  1
+                </span>
+                <h3 className="mt-4 text-lg font-bold text-primary">Sign In</h3>
+                <p className="mt-2 text-sm text-secondary" style={{ lineHeight: 1.65 }}>
+                  Sign in with your Google account. No registration forms needed.
+                </p>
+              </div>
 
-            {/* Step 2 */}
-            <div className="relative flex flex-col items-center text-center">
-              <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary text-lg font-bold text-white">
-                2
-              </span>
-              <h3 className="mt-4 text-lg font-bold text-primary">Add Stocks</h3>
-              <p className="mt-2 text-sm text-secondary" style={{ lineHeight: 1.65 }}>
-                Create portfolios and add stocks by searching the Bursa Malaysia listing.
-              </p>
-            </div>
+              {/* Step 2 */}
+              <div className="relative flex flex-col items-center text-center lg:items-start lg:text-left">
+                <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary text-lg font-bold text-white">
+                  2
+                </span>
+                <h3 className="mt-4 text-lg font-bold text-primary">Add Stocks</h3>
+                <p className="mt-2 text-sm text-secondary" style={{ lineHeight: 1.65 }}>
+                  Create portfolios and add stocks by searching the Bursa Malaysia listing.
+                </p>
+              </div>
 
-            {/* Step 3 */}
-            <div className="relative flex flex-col items-center text-center">
-              <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary text-lg font-bold text-white">
-                3
-              </span>
-              <h3 className="mt-4 text-lg font-bold text-primary">Track Meetings</h3>
-              <p className="mt-2 text-sm text-secondary" style={{ lineHeight: 1.65 }}>
-                View your calendar and never miss an AGM or EGM again — whether it's
-                virtual, physical, or hybrid.
-              </p>
+              {/* Step 3 */}
+              <div className="relative flex flex-col items-center text-center lg:items-start lg:text-left">
+                <span className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary text-lg font-bold text-white">
+                  3
+                </span>
+                <h3 className="mt-4 text-lg font-bold text-primary">Track Meetings</h3>
+                <p className="mt-2 text-sm text-secondary" style={{ lineHeight: 1.65 }}>
+                  View your calendar and never miss an AGM or EGM again — whether it's
+                  virtual, physical, or hybrid.
+                </p>
+              </div>
             </div>
           </div>
         </div>
