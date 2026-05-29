@@ -269,6 +269,10 @@ export default function Home() {
                     return cells;
                   })()}
                 </div>
+                {/* Tiny hint */}
+                <p className="mt-2 text-center text-[9px] text-white/30">
+                  Click a company to see details
+                </p>
               </div>
             </div>
           </div>
