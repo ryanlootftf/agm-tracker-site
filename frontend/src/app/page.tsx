@@ -151,11 +151,12 @@ export default function Home() {
           <div className="absolute inset-y-0 left-0 w-3/5 bg-gradient-to-r from-[#0f1117] via-[#0f1117]/80 to-transparent" />
         </div>
 
-        <div className="flex w-full max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:gap-16">
+            <div className="flex w-full max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:gap-20">
           {/* Left: text */}
           <div className="flex-1 text-center lg:text-left">
             {/* Pill / tag */}
-            <span className="mb-5 inline-block rounded-full border border-accent-primary/30 bg-accent-primary/10 px-3.5 py-1 text-xs font-semibold tracking-wide text-accent-primary">
+            <span className="mb-5 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold tracking-wide text-accent-primary" style={{ background: "rgba(124,111,255,0.12)", border: "0.5px solid rgba(124,111,255,0.3)" }}>
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-primary" />
               Bursa Malaysia listings
             </span>
 
@@ -178,7 +179,8 @@ export default function Home() {
               </Link>
               <button
                 onClick={scrollToHowItWorks}
-                className="rounded-lg border border-accent-primary/40 px-7 py-3.5 text-sm font-bold text-accent-primary transition-colors hover:border-accent-primary/70 hover:bg-accent-primary/5"
+                className="rounded-lg px-7 py-3.5 text-sm font-bold text-white/80 transition-colors hover:bg-white/5"
+                style={{ border: "0.5px solid rgba(255,255,255,0.2)" }}
               >
                 See how it works
               </button>
@@ -187,7 +189,7 @@ export default function Home() {
 
           {/* Right: floating calendar mockup */}
           <div className="flex-shrink-0">
-            <div className="relative w-72 overflow-hidden rounded-xl bg-[#1a1d27] shadow-2xl shadow-black/40 ring-1 ring-white/10 sm:w-80 lg:w-[420px]">
+          <div className="relative w-72 overflow-hidden rounded-xl bg-[#1a1d27] shadow-2xl shadow-black/40 ring-1 ring-white/10 sm:w-80 lg:w-[380px]">
               {/* Mockup browser bar */}
               <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
@@ -291,7 +293,7 @@ export default function Home() {
                   <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-primary">Portfolio Tracker</h3>
+              <h3 className="text-lg font-medium text-primary">Portfolio Tracker</h3>
               <p className="mt-2 text-sm leading-relaxed text-secondary" style={{ lineHeight: 1.65 }}>
                 Built-in portfolio management. Create colour-coded portfolios, add stocks,
                 and track your holdings in one place.
@@ -306,7 +308,7 @@ export default function Home() {
                   <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9a1.5 1.5 0 00-1.5-1.5H5.25a1.5 1.5 0 00-1.5 1.5v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-primary">Meeting Calendar</h3>
+              <h3 className="text-lg font-medium text-primary">Meeting Calendar</h3>
               <p className="mt-2 text-sm leading-relaxed text-secondary" style={{ lineHeight: 1.65 }}>
                 View all upcoming AGMs and EGMs at a glance — including dates, times,
                 venue types, and physical meeting locations.
@@ -320,7 +322,7 @@ export default function Home() {
                   <path fillRule="evenodd" d="M19.902 4.098a3.75 3.75 0 00-5.304 0l-4.5 4.5a3.75 3.75 0 001.035 6.037.75.75 0 01-.646 1.353 5.25 5.25 0 01-1.449-8.45l4.5-4.5a5.25 5.25 0 117.424 7.424l-1.757 1.757a.75.75 0 11-1.06-1.06l1.757-1.757a3.75 3.75 0 000-5.304zm-7.389 4.267a.75.75 0 011-.353 5.25 5.25 0 011.449 8.45l-4.5 4.5a5.25 5.25 0 11-7.424-7.424l1.757-1.757a.75.75 0 111.06 1.06l-1.757 1.757a3.75 3.75 0 105.304 5.304l4.5-4.5a3.75 3.75 0 00-1.035-6.037.75.75 0 01-.354-1z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-primary">Meeting Links</h3>
+              <h3 className="text-lg font-medium text-primary">Meeting Links</h3>
               <p className="mt-2 text-sm leading-relaxed text-secondary" style={{ lineHeight: 1.65 }}>
                 Hybrid meetings include direct join links so you can participate virtually
                 without searching for the details.
@@ -332,12 +334,12 @@ export default function Home() {
 
       {/* ---------- Divider band (laptop photo with overlay + quote) ---------- */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 overflow-hidden">
           <Image
             src={laptopPhoto}
             alt=""
             fill
-            className="object-cover object-center"
+            className="object-cover object-center scale-110"
           />
           {/* Dark overlay */}
           <div className="absolute inset-0 bg-black/65" />
@@ -407,7 +409,7 @@ export default function Home() {
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-border px-6 py-8 sm:px-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+        <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
           <p className="text-sm font-medium text-secondary">
             &copy; {new Date().getFullYear()} AGM Meeting Tracker
           </p>
