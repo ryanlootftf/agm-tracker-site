@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import landingImage from "@/images/landing_1.png";
 
 export default function Home() {
   return (
@@ -49,50 +51,17 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: illustration */}
+          {/* Right: image */}
           <div className="flex-shrink-0">
-            <div className="relative">
-              {/* Calendar + chart SVG */}
-              <svg
-                width="280"
-                height="240"
-                viewBox="0 0 280 240"
-                fill="none"
-                className="h-auto w-64 sm:w-72 lg:w-80"
-              >
-                {/* Calendar body */}
-                <rect x="40" y="50" width="200" height="160" rx="16" className="fill-card stroke-border" strokeWidth="2" />
-                {/* Calendar header bar */}
-                <rect x="40" y="50" width="200" height="40" rx="16" className="fill-accent-bg" />
-                <rect x="40" y="74" width="200" height="16" className="fill-accent-bg" />
-                {/* Month label */}
-                <text x="140" y="75" textAnchor="middle" className="fill-accent-text text-sm" fontWeight="700">
-                  MAY 2026
-                </text>
-                {/* Date grid dots */}
-                <circle cx="68" cy="112" r="6" className="fill-accent-text/60" />
-                <circle cx="100" cy="112" r="6" className="fill-accent-text/60" />
-                <circle cx="132" cy="112" r="6" className="fill-accent-text/60" />
-                <circle cx="164" cy="112" r="6" className="fill-accent-text/60" />
-                <circle cx="196" cy="112" r="6" className="fill-accent-text/60" />
-                <circle cx="68" cy="144" r="6" className="fill-accent-text/60" />
-                <circle cx="100" cy="144" r="6" className="fill-accent-text/60" />
-                <circle cx="132" cy="144" r="6" className="fill-accent-text/60" />
-                <circle cx="164" cy="144" r="6" className="fill-accent-text/60" />
-                <circle cx="196" cy="144" r="6" className="fill-accent-text/60" />
-                <circle cx="68" cy="176" r="6" className="fill-accent-text/60" />
-                <circle cx="100" cy="176" r="6" className="fill-accent-text/60" />
-                <circle cx="132" cy="176" r="6" className="fill-accent-text/60" />
-                <circle cx="164" cy="176" r="6" className="fill-accent-text/60" />
-                <circle cx="196" cy="176" r="6" className="fill-accent-text/60" />
-                {/* Highlighted date (today) */}
-                <circle cx="132" cy="144" r="8" className="fill-accent-text" />
-                <text x="132" y="148" textAnchor="middle" className="fill-white text-[10px]" fontWeight="bold">
-                  15
-                </text>
-                {/* Little chart line on the side */}
-                <polyline points="228,120 240,110 252,130 264,100 276,105" className="stroke-accent-text/40" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+            <div className="relative overflow-hidden rounded-xl shadow-lg ring-1 ring-border">
+              <Image
+                src={landingImage}
+                alt="AGM Meeting Tracker dashboard"
+                width={560}
+                height={400}
+                className="h-auto w-72 sm:w-80 lg:w-[560px]"
+                priority
+              />
             </div>
           </div>
         </div>
@@ -128,8 +97,8 @@ export default function Home() {
               </div>
               <h3 className="text-lg font-bold text-primary">Meeting Calendar</h3>
               <p className="mt-2 text-sm leading-relaxed text-secondary">
-                View all upcoming AGMs and EGMs at a glance. Filter by portfolio and see
-                which stocks have meetings on each day.
+                View all upcoming AGMs and EGMs at a glance — including dates, times,
+                venue types, and physical meeting locations.
               </p>
             </div>
 
@@ -188,7 +157,8 @@ export default function Home() {
               </span>
               <h3 className="mt-4 text-lg font-bold text-primary">Track Meetings</h3>
               <p className="mt-2 text-sm text-secondary">
-                View your calendar and never miss an AGM or EGM again.
+                View your calendar and never miss an AGM or EGM again — whether it's
+                virtual, physical, or hybrid.
               </p>
             </div>
           </div>
