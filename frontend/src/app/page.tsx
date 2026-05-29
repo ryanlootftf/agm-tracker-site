@@ -357,25 +357,8 @@ export default function Home() {
       </section>
 
       {/* ---------- How It Works ---------- */}
-      <section id="how-it-works" className="relative overflow-hidden px-6 py-20 sm:px-10">
-        {/* Right: laptop/online meeting photo */}
-        <div className="absolute inset-y-0 right-0 hidden w-1/2 lg:block">
-          <Image
-            src={laptopPhoto}
-            alt=""
-            fill
-            className="object-cover object-center"
-          />
-          {/* Dark scrim overlay */}
-          <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.45)" }} />
-          {/* Left-side gradient fade — dissolves into dark background */}
-          <div
-            className="absolute inset-y-0 left-0 w-3/5"
-            style={{ background: "linear-gradient(to right, #0f1117 0%, transparent 40%)" }}
-          />
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-4xl">
+      <section id="how-it-works" className="px-6 py-20 sm:px-10">
+        <div className="mx-auto max-w-4xl">
           <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl">
             How it works
           </h2>
