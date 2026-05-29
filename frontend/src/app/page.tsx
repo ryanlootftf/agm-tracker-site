@@ -410,14 +410,9 @@ export default function Home() {
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-border px-6 py-8 sm:px-10">
-        <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-          <p className="text-sm font-medium text-secondary">
-            &copy; {new Date().getFullYear()} AGM Meeting Tracker
-          </p>
-          <p className="text-xs text-secondary/60">
-            Data sourced from i3investor &middot; Bursa Malaysia
-          </p>
-        </div>
+        <p className="text-center text-sm text-secondary">
+          &copy; {new Date().getFullYear()} AGM Meeting Tracker &middot; Data sourced from i3investor &middot; Bursa Malaysia
+        </p>
       </footer>
     </div>
   );
