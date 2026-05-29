@@ -27,7 +27,6 @@ const meetingData: Record<number, MeetingInfo[]> = {
 
 export default function Home() {
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingInfo | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   const scrollToHowItWorks = () => {
     const el = document.getElementById("how-it-works");
@@ -36,12 +35,10 @@ export default function Home() {
 
   const openMeeting = (m: MeetingInfo) => {
     setSelectedMeeting(m);
-    setPanelOpen(true);
   };
 
-  const closePanel = () => {
-    setPanelOpen(false);
-    setTimeout(() => setSelectedMeeting(null), 200); // wait for slide-out
+  const closeMeeting = () => {
+    setSelectedMeeting(null);
   };
 
   // Mini calendar grid data — a sample month with a few meeting dots
@@ -56,113 +53,72 @@ export default function Home() {
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-page">
-      {/* ---------- Side panel overlay ---------- */}
-      {panelOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40"
-          onClick={closePanel}
-        />
-      )}
-
-      {/* ---------- Side panel (drawer from right) ---------- */}
-      <div
-        className={`fixed top-0 right-0 z-50 h-full w-full max-w-sm transform bg-[#151821] shadow-2xl ring-1 ring-white/10 transition-transform duration-200 ease-out ${
-          panelOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Panel header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <h2 className="text-sm font-bold text-primary">Meeting Details</h2>
-          <button
-            onClick={closePanel}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+      {/* ---------- Meeting Detail Popover ---------- */}
+      {selectedMeeting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={closeMeeting}>
+          <div
+            className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl ring-1 ring-border mx-4"
+            onClick={(e) => e.stopPropagation()}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Panel body */}
-        {selectedMeeting && (
-          <div className="p-5 space-y-5">
-            {/* Ticker badge */}
-            <div className="flex items-center gap-3">
-              <span
-                className="inline-block h-3 w-3 rounded-full"
-                style={{ backgroundColor: selectedMeeting.colour }}
-              />
-              <span className="text-xl font-extrabold text-primary">
-                {selectedMeeting.ticker}
-              </span>
-              <span
-                className={`ml-auto rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                  selectedMeeting.type === "AGM"
-                    ? "bg-accent-primary/15 text-accent-primary"
-                    : "bg-amber-500/15 text-amber-400"
-                }`}
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-primary">
+                  {selectedMeeting.ticker}
+                </h3>
+                <p className="text-sm text-secondary">{selectedMeeting.company}</p>
+              </div>
+              <button
+                onClick={closeMeeting}
+                className="text-secondary hover:text-primary transition-colors"
               >
-                {selectedMeeting.type}
-              </span>
-            </div>
-
-            {/* Company name */}
-            <div>
-              <p className="text-xs text-secondary/60 uppercase tracking-wider">Company</p>
-              <p className="mt-0.5 text-sm font-semibold text-primary">{selectedMeeting.company}</p>
-            </div>
-
-            <hr className="border-white/10" />
-
-            {/* Date */}
-            <div>
-              <p className="text-xs text-secondary/60 uppercase tracking-wider">Date</p>
-              <p className="mt-0.5 text-sm font-semibold text-primary">
-                {firstDay.toLocaleString("default", { month: "long", year: "numeric" })}
-              </p>
-            </div>
-
-            {/* Time */}
-            <div>
-              <p className="text-xs text-secondary/60 uppercase tracking-wider">Time</p>
-              <p className="mt-0.5 text-sm font-semibold text-primary">{selectedMeeting.time}</p>
-            </div>
-
-            {/* Venue */}
-            <div>
-              <p className="text-xs text-secondary/60 uppercase tracking-wider">Venue</p>
-              <p className="mt-0.5 text-sm font-semibold text-primary">{selectedMeeting.venue}</p>
-            </div>
-
-            {/* Hybrid tag */}
-            {selectedMeeting.hybrid && (
-              <div className="inline-flex items-center gap-1.5 rounded-md border border-teal-500/30 bg-teal-500/10 px-2.5 py-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-teal-400">
-                  <path d="M3.196 12.87l-.825.483a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.758 0l7.25-4.25a.75.75 0 000-1.294l-.825-.484-5.666 3.322a2.25 2.25 0 01-2.276 0L3.196 12.87z" />
-                  <path d="M3.196 8.87l-.825.483a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.758 0l7.25-4.25a.75.75 0 000-1.294l-.825-.484-5.666 3.322a2.25 2.25 0 01-2.276 0L3.196 8.87z" />
-                  <path d="M10.38 1.103a.75.75 0 00-.76 0l-7.25 4.25a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.76 0l7.25-4.25a.75.75 0 000-1.294l-7.25-4.25z" />
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                <span className="text-[11px] font-semibold text-teal-400">Hybrid — Join Online</span>
+              </button>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-secondary font-medium">Type</span>
+                <span className={`font-bold ${selectedMeeting.type === "AGM" ? "text-accent-primary" : "text-amber-400"}`}>
+                  {selectedMeeting.type}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-secondary font-medium">Date</span>
+                <span className="text-primary font-bold">
+                  {firstDay.toLocaleString("default", { month: "long", year: "numeric" })}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-secondary font-medium">Time</span>
+                <span className="text-primary font-medium">{selectedMeeting.time}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-secondary font-medium">Venue</span>
+                <span className="text-primary font-medium">{selectedMeeting.venue}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-secondary font-medium">Format</span>
+                <span className="text-primary font-medium">{selectedMeeting.hybrid ? "Hybrid" : "Physical"}</span>
+              </div>
+            </div>
+
+            {selectedMeeting.hybrid && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full rounded-md bg-accent-primary px-4 py-2 text-center text-sm font-medium text-white shadow-sm hover:brightness-110 transition-colors"
+                >
+                  Open Meeting Link
+                </a>
               </div>
             )}
-
-            <hr className="border-white/10" />
-
-            {/* Action buttons */}
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={closePanel}
-                className="flex-1 rounded-lg border border-accent-primary/40 px-4 py-2 text-xs font-bold text-accent-primary transition-colors hover:border-accent-primary/70 hover:bg-accent-primary/5"
-              >
-                Close
-              </button>
-              <button className="flex-1 rounded-lg bg-accent-primary px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.97]">
-                Add to Calendar
-              </button>
-            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ---------- Nav bar ---------- */}
       <nav className="relative z-30 flex items-center justify-between px-6 py-4 sm:px-10">
