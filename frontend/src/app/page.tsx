@@ -106,9 +106,13 @@ export default function Home() {
 
             {selectedMeeting.hybrid && (
               <div className="mt-4 pt-4 border-t border-border">
-                <span className="block w-full rounded-md bg-accent-primary/60 px-4 py-2 text-center text-sm font-medium text-white/80 shadow-sm cursor-default select-none">
+                <button
+                  type="button"
+                  className="w-full rounded-md bg-accent-primary px-4 py-2 text-center text-sm font-medium text-white shadow-sm"
+                  aria-disabled="true"
+                >
                   Open Meeting Link
-                </span>
+                </button>
               </div>
             )}
           </div>
