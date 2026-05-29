@@ -345,11 +345,11 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/65" />
         </div>
         <div className="relative z-10 flex items-center justify-center px-6 py-24 sm:px-10 sm:py-32">
-          <div className="text-center">
-            <p className="text-xl font-semibold tracking-tight text-white/90 sm:text-2xl lg:text-3xl" style={{ lineHeight: 1.65 }}>
+          <div className="text-center" style={{ background: "rgba(0,0,0,0.5)", padding: "16px 28px", borderRadius: "10px" }}>
+            <p className="tracking-tight" style={{ fontSize: "clamp(22px, 4vw, 32px)", fontWeight: 500, lineHeight: 1.65, color: "#ffffff", textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
               &ldquo;Join 2,000+ shareholders tracking AGMs&rdquo;
             </p>
-            <p className="mt-3 text-sm text-white/50">
+            <p className="mt-3 text-sm" style={{ color: "#ffffff", textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
               Stay informed. Never miss a vote.
             </p>
           </div>
