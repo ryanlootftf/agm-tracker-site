@@ -4,6 +4,36 @@ import conferencePhoto from "@/images/landing_1.png";
 import laptopPhoto from "@/images/landing_2.png";
 
 export default function Home() {
+
+  const scrollToHowItWorks = () => {
+    const el = document.getElementById("how-it-works");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Mini calendar grid data — a sample month with a few meeting dots
+  const today = new Date();
+  const sampleYear = today.getFullYear();
+  const sampleMonth = today.getMonth();
+  const firstDay = new Date(sampleYear, sampleMonth, 1);
+  let startOffset = firstDay.getDay() - 1;
+  if (startOffset < 0) startOffset = 6;
+  const daysInMonth = new Date(sampleYear, sampleMonth + 1, 0).getDate();
+
+  // Meeting markers on specific days (ticker, colour)
+  const meetingMarkers: Record<number, { ticker: string; colour: string }[]> = {
+    3:  [{ ticker: "MAYBANK", colour: "#6366F1" }],
+    7:  [{ ticker: "RHBBANK", colour: "#10B981" }, { ticker: "CIMB", colour: "#F97316" }],
+    12: [{ ticker: "TENAGA", colour: "#3B82F6" }],
+    15: [{ ticker: "PMETAL", colour: "#EC4899" }],
+    18: [{ ticker: "SIMEPROP", colour: "#EAB308" }],
+    22: [{ ticker: "GAMUDA", colour: "#A855F7" }, { ticker: "IJM", colour: "#6366F1" }],
+    25: [{ ticker: "MAYBANK", colour: "#6366F1" }],
+    28: [{ ticker: "MRDIY", colour: "#10B981" }],
+  };
+
+  const todayStr = `${sampleYear}-${String(sampleMonth + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const todayDay = today.getDate();
+
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-page">
       {/* ---------- Nav bar ---------- */}
@@ -63,16 +93,16 @@ export default function Home() {
               >
                 Get Started Free
               </Link>
-              <Link
-                href="#how-it-works"
+              <button
+                onClick={scrollToHowItWorks}
                 className="rounded-lg border border-accent-primary/40 px-7 py-3.5 text-sm font-bold text-accent-primary transition-colors hover:border-accent-primary/70 hover:bg-accent-primary/5"
               >
                 See how it works
-              </Link>
+              </button>
             </div>
           </div>
 
-          {/* Right: floating UI mockup card */}
+          {/* Right: floating calendar mockup */}
           <div className="flex-shrink-0">
             <div className="relative w-72 overflow-hidden rounded-xl bg-[#1a1d27] shadow-2xl shadow-black/40 ring-1 ring-white/10 sm:w-80 lg:w-[420px]">
               {/* Mockup browser bar */}
@@ -84,33 +114,72 @@ export default function Home() {
                   agmtracker.app/dashboard
                 </span>
               </div>
-              {/* Mockup body */}
-              <div className="space-y-3 p-4">
-                {/* Portfolio summary row */}
-                <div className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
-                  <div className="h-8 w-8 rounded-lg bg-accent-primary/20" />
-                  <div className="flex-1 space-y-1">
-                    <div className="h-2.5 w-24 rounded bg-white/15" />
-                    <div className="h-2 w-16 rounded bg-white/10" />
+              {/* Mockup body: calendar */}
+              <div className="p-3 sm:p-4">
+                {/* Calendar header */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-white/80">
+                    {firstDay.toLocaleString("default", { month: "long", year: "numeric" })}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-white/10" />
+                    <span className="h-3 w-3 rounded bg-white/10" />
+                    <span className="ml-1 rounded bg-accent-primary/30 px-1.5 py-0.5 text-[8px] font-semibold text-accent-primary">
+                      Today
+                    </span>
                   </div>
-                  <div className="h-2.5 w-12 rounded bg-emerald-400/40" />
                 </div>
-                {/* Upcoming meetings header */}
-                <div className="flex items-center justify-between">
-                  <div className="h-3 w-36 rounded bg-white/15" />
-                  <div className="h-3 w-16 rounded bg-white/10" />
+
+                {/* Day-of-week headers */}
+                <div className="grid grid-cols-7 text-center text-[9px] font-medium text-white/40 mb-1">
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+                    <div key={d} className="py-0.5">{d}</div>
+                  ))}
                 </div>
-                {/* Meeting cards */}
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-                    <div className="h-2 w-2 rounded-full bg-accent-primary/60" />
-                    <div className="flex-1 space-y-1">
-                      <div className="h-2.5 w-28 rounded bg-white/15" />
-                      <div className="h-2 w-20 rounded bg-white/10" />
-                    </div>
-                    <div className="h-5 w-14 rounded bg-accent-primary/20" />
-                  </div>
-                ))}
+
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 text-xs">
+                  {(() => {
+                    const cells: React.ReactNode[] = [];
+                    for (let i = 0; i < startOffset; i++) {
+                      cells.push(<div key={`empty-${i}`} className="min-h-[44px] p-0.5" />);
+                    }
+                    for (let day = 1; day <= daysInMonth; day++) {
+                      const markers = meetingMarkers[day] ?? [];
+                      const isToday = day === todayDay;
+                      cells.push(
+                        <div
+                          key={day}
+                          className={`min-h-[44px] p-0.5 border-t border-l border-white/10 ${
+                            isToday ? "bg-white/10" : ""
+                          }`}
+                        >
+                          <div
+                            className={`text-[10px] font-medium mb-0.5 ${
+                              isToday
+                                ? "inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent-primary text-white"
+                                : "text-white/50"
+                            }`}
+                          >
+                            {day}
+                          </div>
+                          {markers.map((m, i) => (
+                            <div key={i} className="flex items-center gap-0.5 mb-0.5">
+                              <span
+                                className="inline-block h-1.5 w-1.5 rounded-full shrink-0"
+                                style={{ backgroundColor: m.colour }}
+                              />
+                              <span className="text-[8px] font-bold text-white/70 truncate leading-none">
+                                {m.ticker}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return cells;
+                  })()}
+                </div>
               </div>
             </div>
           </div>
