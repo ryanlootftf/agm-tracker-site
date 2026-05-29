@@ -2,14 +2,46 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import conferencePhoto from "@/images/landing_1.png";
 import laptopPhoto from "@/images/landing_2.png";
 
+/** Shape of a meeting marker */
+interface MeetingInfo {
+  ticker: string;
+  company: string;
+  colour: string;
+  type: "AGM" | "EGM";
+  time: string;
+  venue: string;
+  hybrid: boolean;
+}
+
+/** Sample meeting details for the mockup */
+const meetingData: Record<number, MeetingInfo[]> = {
+  3:  [{ ticker: "MAYBANK", company: "Malayan Banking Bhd", colour: "#6366F1", type: "AGM", time: "10:00 AM MYT", venue: "Menara Maybank, KL", hybrid: true }],
+  12: [{ ticker: "TENAGA", company: "Tenaga Nasional Bhd", colour: "#3B82F6", type: "AGM", time: "2:30 PM MYT", venue: "Bangi Resort Hotel", hybrid: true }],
+  22: [{ ticker: "GAMUDA", company: "Gamuda Bhd", colour: "#A855F7", type: "AGM", time: "9:00 AM MYT", venue: "Gamuda HQ, Petaling Jaya", hybrid: false }],
+  28: [{ ticker: "MRDIY", company: "MR D.I.Y. Group (M) Bhd", colour: "#10B981", type: "EGM", time: "11:00 AM MYT", venue: "Virtual Only", hybrid: false }],
+};
+
 export default function Home() {
+  const [selectedMeeting, setSelectedMeeting] = useState<MeetingInfo | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const scrollToHowItWorks = () => {
     const el = document.getElementById("how-it-works");
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const openMeeting = (m: MeetingInfo) => {
+    setSelectedMeeting(m);
+    setPanelOpen(true);
+  };
+
+  const closePanel = () => {
+    setPanelOpen(false);
+    setTimeout(() => setSelectedMeeting(null), 200); // wait for slide-out
   };
 
   // Mini calendar grid data — a sample month with a few meeting dots
@@ -20,24 +52,118 @@ export default function Home() {
   let startOffset = firstDay.getDay() - 1;
   if (startOffset < 0) startOffset = 6;
   const daysInMonth = new Date(sampleYear, sampleMonth + 1, 0).getDate();
-
-  // Meeting markers on specific days (ticker, colour)
-  const meetingMarkers: Record<number, { ticker: string; colour: string }[]> = {
-    3:  [{ ticker: "MAYBANK", colour: "#6366F1" }],
-    7:  [{ ticker: "RHBBANK", colour: "#10B981" }, { ticker: "CIMB", colour: "#F97316" }],
-    12: [{ ticker: "TENAGA", colour: "#3B82F6" }],
-    15: [{ ticker: "PMETAL", colour: "#EC4899" }],
-    18: [{ ticker: "SIMEPROP", colour: "#EAB308" }],
-    22: [{ ticker: "GAMUDA", colour: "#A855F7" }, { ticker: "IJM", colour: "#6366F1" }],
-    25: [{ ticker: "MAYBANK", colour: "#6366F1" }],
-    28: [{ ticker: "MRDIY", colour: "#10B981" }],
-  };
-
-  const todayStr = `${sampleYear}-${String(sampleMonth + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const todayDay = today.getDate();
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-page">
+      {/* ---------- Side panel overlay ---------- */}
+      {panelOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40"
+          onClick={closePanel}
+        />
+      )}
+
+      {/* ---------- Side panel (drawer from right) ---------- */}
+      <div
+        className={`fixed top-0 right-0 z-50 h-full w-full max-w-sm transform bg-[#151821] shadow-2xl ring-1 ring-white/10 transition-transform duration-200 ease-out ${
+          panelOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Panel header */}
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+          <h2 className="text-sm font-bold text-primary">Meeting Details</h2>
+          <button
+            onClick={closePanel}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Panel body */}
+        {selectedMeeting && (
+          <div className="p-5 space-y-5">
+            {/* Ticker badge */}
+            <div className="flex items-center gap-3">
+              <span
+                className="inline-block h-3 w-3 rounded-full"
+                style={{ backgroundColor: selectedMeeting.colour }}
+              />
+              <span className="text-xl font-extrabold text-primary">
+                {selectedMeeting.ticker}
+              </span>
+              <span
+                className={`ml-auto rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                  selectedMeeting.type === "AGM"
+                    ? "bg-accent-primary/15 text-accent-primary"
+                    : "bg-amber-500/15 text-amber-400"
+                }`}
+              >
+                {selectedMeeting.type}
+              </span>
+            </div>
+
+            {/* Company name */}
+            <div>
+              <p className="text-xs text-secondary/60 uppercase tracking-wider">Company</p>
+              <p className="mt-0.5 text-sm font-semibold text-primary">{selectedMeeting.company}</p>
+            </div>
+
+            <hr className="border-white/10" />
+
+            {/* Date */}
+            <div>
+              <p className="text-xs text-secondary/60 uppercase tracking-wider">Date</p>
+              <p className="mt-0.5 text-sm font-semibold text-primary">
+                {firstDay.toLocaleString("default", { month: "long", year: "numeric" })}
+              </p>
+            </div>
+
+            {/* Time */}
+            <div>
+              <p className="text-xs text-secondary/60 uppercase tracking-wider">Time</p>
+              <p className="mt-0.5 text-sm font-semibold text-primary">{selectedMeeting.time}</p>
+            </div>
+
+            {/* Venue */}
+            <div>
+              <p className="text-xs text-secondary/60 uppercase tracking-wider">Venue</p>
+              <p className="mt-0.5 text-sm font-semibold text-primary">{selectedMeeting.venue}</p>
+            </div>
+
+            {/* Hybrid tag */}
+            {selectedMeeting.hybrid && (
+              <div className="inline-flex items-center gap-1.5 rounded-md border border-teal-500/30 bg-teal-500/10 px-2.5 py-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-teal-400">
+                  <path d="M3.196 12.87l-.825.483a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.758 0l7.25-4.25a.75.75 0 000-1.294l-.825-.484-5.666 3.322a2.25 2.25 0 01-2.276 0L3.196 12.87z" />
+                  <path d="M3.196 8.87l-.825.483a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.758 0l7.25-4.25a.75.75 0 000-1.294l-.825-.484-5.666 3.322a2.25 2.25 0 01-2.276 0L3.196 8.87z" />
+                  <path d="M10.38 1.103a.75.75 0 00-.76 0l-7.25 4.25a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.76 0l7.25-4.25a.75.75 0 000-1.294l-7.25-4.25z" />
+                </svg>
+                <span className="text-[11px] font-semibold text-teal-400">Hybrid — Join Online</span>
+              </div>
+            )}
+
+            <hr className="border-white/10" />
+
+            {/* Action buttons */}
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={closePanel}
+                className="flex-1 rounded-lg border border-accent-primary/40 px-4 py-2 text-xs font-bold text-accent-primary transition-colors hover:border-accent-primary/70 hover:bg-accent-primary/5"
+              >
+                Close
+              </button>
+              <button className="flex-1 rounded-lg bg-accent-primary px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.97]">
+                Add to Calendar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ---------- Nav bar ---------- */}
       <nav className="relative z-30 flex items-center justify-between px-6 py-4 sm:px-10">
         <Link href="/" className="text-lg font-bold tracking-tight text-primary">
@@ -147,7 +273,7 @@ export default function Home() {
                       cells.push(<div key={`empty-${i}`} className="min-h-[44px] p-0.5" />);
                     }
                     for (let day = 1; day <= daysInMonth; day++) {
-                      const markers = meetingMarkers[day] ?? [];
+                      const markers = meetingData[day] ?? [];
                       const isToday = day === todayDay;
                       cells.push(
                         <div
@@ -166,7 +292,11 @@ export default function Home() {
                             {day}
                           </div>
                           {markers.map((m, i) => (
-                            <div key={i} className="flex items-center gap-0.5 mb-0.5">
+                            <button
+                              key={i}
+                              onClick={() => openMeeting(m)}
+                              className="flex w-full items-center gap-0.5 mb-0.5 rounded px-0.5 transition-colors hover:bg-white/5"
+                            >
                               <span
                                 className="inline-block h-1.5 w-1.5 rounded-full shrink-0"
                                 style={{ backgroundColor: m.colour }}
@@ -174,7 +304,7 @@ export default function Home() {
                               <span className="text-[8px] font-bold text-white/70 truncate leading-none">
                                 {m.ticker}
                               </span>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       );
